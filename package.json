@@ -13,6 +13,10 @@
     "ts-node": "^10.9.1"
   },
   "scripts": {
-    "runtime-constants": "ts-node ./runtime-constants/index.ts"
+    "runtime-constants": "ts-node ./runtime-constants/index.ts",
+    "state-queries": "ts-node ./state-queries/index.ts",
+    "rpc-queries": "ts-node ./rpc-queries/index.ts",
+    "block-subscription": "ts-node ./rpc-queries/block-subscription.ts"
+
   }
 }
