@@ -13,6 +13,6 @@
     "ts-node": "^10.9.1"
   },
   "scripts": {
-    "test": "ts-node ./instance/index.ts"
+    "runtime-constants": "ts-node ./runtime-constants/index.ts"
   }
 }
