@@ -8,8 +8,12 @@ import '@polkadot/api-augment'
     // Retrieve the chain name
     const chain = await inst.rpc.system.chain();
 
+    let count = 0
     // Subscribe to the new headers
-    await inst.rpc.chain.subscribeNewHeads((lastHeader) => {
+    const unsubHeads = await inst.rpc.chain.subscribeNewHeads((lastHeader) => {
         console.log(`${chain}: last block #${lastHeader.number} has hash ${lastHeader.hash}`);
+        if ( ++count === 10) {
+            unsubHeads()
+        }
     });
 })()
