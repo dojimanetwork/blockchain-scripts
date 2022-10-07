@@ -22,7 +22,8 @@
     "transfer": "ts-node ./tx/index.ts",
     "remark": "ts-node ./system/remark.ts",
     "batch": "ts-node ./utility/index.ts",
-    "block": "ts-node ./rpc-queries/block.ts"
+    "block": "ts-node ./rpc-queries/block.ts",
+    "estimate": "ts-node ./tx/estimate.ts"
 
   }
 }
