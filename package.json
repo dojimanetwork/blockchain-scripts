@@ -19,7 +19,8 @@
     "block-subscription": "ts-node ./rpc-queries/block-subscription.ts",
     "adderss": "ts-node ./account/address.ts",
     "verify-signature": "ts-node ./account/signature.ts",
-    "transfer": "ts-node ./tx/index.ts"
+    "transfer": "ts-node ./tx/index.ts",
+    "remark": "ts-node ./system/remark.ts"
 
   }
 }
