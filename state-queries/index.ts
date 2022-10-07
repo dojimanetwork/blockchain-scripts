@@ -5,7 +5,7 @@ import '@polkadot/api-augment'
 (async () => {
     const inst:ApiPromise = await CreateInstance()
     // The actual address that we will use
-    const ADDR = '5DTestUPts3kjeXSTMyerHihn1uwMfLj8vU8sqF7qYrFabHE';
+    const ADDR = '5Gq3owRKkXLneUckXUc5UxKugXiqq78b71UQC4uHxcXFPdwH';
 
     // Retrieve the last timestamp
     const now = await inst.query.timestamp.now();
