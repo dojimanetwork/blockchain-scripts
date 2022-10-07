@@ -20,7 +20,8 @@
     "adderss": "ts-node ./account/address.ts",
     "verify-signature": "ts-node ./account/signature.ts",
     "transfer": "ts-node ./tx/index.ts",
-    "remark": "ts-node ./system/remark.ts"
+    "remark": "ts-node ./system/remark.ts",
+    "batch": "ts-node ./utility/index.ts"
 
   }
 }
