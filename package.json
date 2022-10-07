@@ -21,7 +21,8 @@
     "verify-signature": "ts-node ./account/signature.ts",
     "transfer": "ts-node ./tx/index.ts",
     "remark": "ts-node ./system/remark.ts",
-    "batch": "ts-node ./utility/index.ts"
+    "batch": "ts-node ./utility/index.ts",
+    "block": "ts-node ./rpc-queries/block.ts"
 
   }
 }
