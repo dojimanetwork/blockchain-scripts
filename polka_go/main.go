@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	iScale "github.com/itering/scale.go"
 	iTypes "github.com/itering/scale.go/types"
 	scaleBytes "github.com/itering/scale.go/types/scaleBytes"
@@ -13,6 +12,7 @@ import (
 	irpc "github.com/itering/substrate-api-rpc/rpc"
 	iutils "github.com/itering/substrate-api-rpc/util"
 	iws "github.com/itering/substrate-api-rpc/websocket"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -27,24 +27,20 @@ func ConnectDot() {
 
 func main() {
 	ConnectDot()
-	api, err := gsrpc.NewSubstrateAPI(endpoint)
-	//iapi, err := iws.Init()
-	//isconn := iapi.Conn.IsConnected()
-	//iapi.Conn.Dial(endpoint, http.Header{})
-	//iapi.Conn.RemoteAddr()
-	//fmt.Printf("%v%t", iapi.Conn, isconn)
-	if err != nil {
-
-	}
-	//
-	blockHash, err := api.RPC.Chain.GetBlockHash(12782886)
-	fmt.Println("block hash", blockHash.Hex())
+	iapi, err := iws.Init()
+	iapi.Conn.Dial(endpoint, http.Header{})
 
 	if err != nil {
 
 	}
+	blockResult := &irpc.JsonRpcResult{}
 
-	codedMetadataAtHash, err := irpc.GetMetadataByHash(nil, blockHash.Hex())
+	err = iws.SendWsRequest(nil, blockResult, irpc.ChainGetBlockHash(12782886, 12782886))
+	if err != nil {
+
+	}
+	blockHash := blockResult.Result.(string)
+	codedMetadataAtHash, err := irpc.GetMetadataByHash(nil, blockHash)
 	if err != nil {
 
 	}
@@ -70,7 +66,8 @@ func main() {
 
 	v := &irpc.JsonRpcResult{}
 
-	err = iws.SendWsRequest(nil, v, irpc.ChainGetBlock(12782886, blockHash.Hex()))
+	err = iws.SendWsRequest(nil, v, irpc.ChainGetBlock(12782886, blockHash))
+
 	if err != nil {
 		fmt.Println("Could not read the block", err)
 	}
@@ -137,7 +134,7 @@ func unmarshalAny(r interface{}, raw interface{}) error {
 
 func ParseUtilityBatch(e *iScale.ExtrinsicDecoder, blockHeight int64) error {
 	call, _ := e.Metadata.CallIndex[e.CallIndex]
-	if e.Module == "Utility" && call.Call.Name == "batch_all" {
+	if e.Module == "Utility" && (call.Call.Name == "batch_all" || call.Call.Name == "batch") {
 		calls := &[]UtilityBatchCall{}
 		err := unmarshalAny(calls, e.Params[0].Value)
 		if err != nil {
