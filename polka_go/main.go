@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	iScale "github.com/itering/scale.go"
@@ -53,13 +54,18 @@ func main() {
 	metaDataInBytes := iutils.HexToBytes(codedMetadataAtHash)
 	m := iScale.MetadataDecoder{}
 	m.Init(metaDataInBytes)
-	m.Process()
+	err = m.Process()
+
+	//fmt.Printf("version %v, metadata %d", m.VersionNumber, m.Metadata.MetadataVersion)
+	if err != nil {
+
+	}
 
 	iMetadata.Latest(&iMetadata.RuntimeRaw{
-		Spec: 12,
+		Spec: 14,
 		Raw:  strings.TrimPrefix(codedMetadataAtHash, "0x"),
 	})
-	currentMetadata := iMetadata.RuntimeMetadata[12]
+	currentMetadata := iMetadata.RuntimeMetadata[14]
 	//fmt.Printf("metadata in bytes %v", currentMetadata)
 
 	v := &irpc.JsonRpcResult{}
@@ -75,12 +81,14 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("BXL: readBlockUsingItering: blockHeight: ", blockHeight)
+	fmt.Println("blockHeight: ", blockHeight)
 	decodedExtrinsics, _ := decodeExtrinsics(rpcBlock.Block.Extrinsics, currentMetadata, 12)
-	//fmt.Printf("decoded extrinsics %v", decodedExtrinsics[2])
 	for _, e := range decodedExtrinsics {
-		ParseUtilityBatch(&e, blockHeight)
-
+		err := ParseUtilityBatch(&e, blockHeight)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
 }
 
@@ -111,15 +119,53 @@ func decodeExtrinsics(list []string, metadata *iMetadata.Instant, spec int) (r [
 	return r, nil
 }
 
-func ParseUtilityBatch(e *iScale.ExtrinsicDecoder, blockHeight int64) {
+// UtilityBatchCall Utility Batch Call
+type UtilityBatchCall struct {
+	CallIndex  string                  `json:"call_index"`
+	CallModule string                  `json:"call_module"`
+	Params     []iTypes.ExtrinsicParam `json:"params"`
+	CallName   string                  `json:"call_name"`
+}
 
-	callDecoder := iTypes.Call{ScaleDecoder: e.ScaleDecoder}
-	callDecoder.Process()
-	module, _ := e.Value.(map[string]interface{})
-	if module["call_module"] == "Utility" && module["call_module_function"] == "batch_all" {
-		fromAddressStr := fmt.Sprintf("%v", e.Address)
-		fromAddress := iSS58.Encode(fromAddressStr, iUtil.StringToInt("42"))
-		fmt.Println(fromAddress)
+func unmarshalAny(r interface{}, raw interface{}) error {
+	j, err := json.Marshal(raw)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, &r)
+}
+
+func ParseUtilityBatch(e *iScale.ExtrinsicDecoder, blockHeight int64) error {
+	call, _ := e.Metadata.CallIndex[e.CallIndex]
+	if e.Module == "Utility" && call.Call.Name == "batch_all" {
+		calls := &[]UtilityBatchCall{}
+		err := unmarshalAny(calls, e.Params[0].Value)
+		if err != nil {
+			return fmt.Errorf("unable to decode utility batch calls: %v", e.Params[0].Value)
+		}
+		dest := ""
+		value := ""
+		memo := ""
+
+		for _, c := range *calls {
+			fmt.Println(c)
+			for _, a := range c.Params {
+				switch a.Name {
+				case "dest":
+					dest = iSS58.Encode(a.Value.(map[string]interface{})["Id"].(string), iUtil.StringToInt("42"))
+					break
+				case "value":
+					value = a.Value.(string)
+					break
+				case "remark":
+					fmt.Println(a.Value.(string))
+					memo = a.Value.(string)
+					break
+				}
+			}
+		}
+
+		fmt.Printf("destination %s amount %s memo %s", dest, value, memo)
 
 	}
 
@@ -177,5 +223,5 @@ func ParseUtilityBatch(e *iScale.ExtrinsicDecoder, blockHeight int64) {
 	//Id:0x3dbcd981952e5bcd4da4e8ee14d76b9a483d3898c76a2452a580d2dd6e5cc7fe]}
 	//{value compact<U128> 10000000}]]]}] 0x14000036640 []}
 
-	//if e.Module
+	return nil
 }
