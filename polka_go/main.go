@@ -44,7 +44,6 @@ func main() {
 	if err != nil {
 
 	}
-
 	//fmt.Printf("coded metadata hash %v", codedMetadataAtHash)
 
 	metaDataInBytes := iutils.HexToBytes(codedMetadataAtHash)
@@ -81,7 +80,7 @@ func main() {
 	fmt.Println("blockHeight: ", blockHeight)
 	decodedExtrinsics, _ := decodeExtrinsics(rpcBlock.Block.Extrinsics, currentMetadata, 12)
 	for _, e := range decodedExtrinsics {
-		err := ParseUtilityBatch(&e, blockHeight)
+		err := ParseUtilityBatch(&e)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -110,7 +109,6 @@ func decodeExtrinsics(list []string, metadata *iMetadata.Instant, spec int) (r [
 		option := iTypes.ScaleDecoderOption{Metadata: &m, Spec: spec}
 		e.Init(scaleBytes.ScaleBytes{Data: iUtil.HexToBytes(extrinsicRaw)}, &option)
 		e.Process()
-
 		r = append(r, e)
 	}
 	return r, nil
@@ -132,7 +130,7 @@ func unmarshalAny(r interface{}, raw interface{}) error {
 	return json.Unmarshal(j, &r)
 }
 
-func ParseUtilityBatch(e *iScale.ExtrinsicDecoder, blockHeight int64) error {
+func ParseUtilityBatch(e *iScale.ExtrinsicDecoder) error {
 	call, _ := e.Metadata.CallIndex[e.CallIndex]
 	if e.Module == "Utility" && (call.Call.Name == "batch_all" || call.Call.Name == "batch") {
 		calls := &[]UtilityBatchCall{}
