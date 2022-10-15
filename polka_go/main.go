@@ -3,11 +3,15 @@ package main
 import (
 	"fmt"
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
+	irpc "github.com/itering/substrate-api-rpc/rpc"
+	"github.com/itering/substrate-api-rpc/websocket"
+	iws "github.com/itering/substrate-api-rpc/websocket"
+	"net/http"
 )
 
 const (
 	westendpoint  = "wss://westend-rpc.polkadot.io"
-	localEndpoint = "ws://127.0.0.1:9944"
+	localEndpoint = "ws://localhost:9944"
 )
 
 type Client struct {
@@ -16,11 +20,16 @@ type Client struct {
 
 func main() {
 	dotRpcClient, err := gsrpc.NewSubstrateAPI(localEndpoint)
+	//fmt.Println(dotRpcClient)
+	websocket.SetEndpoint(localEndpoint)
+	iapi, err := iws.Init()
+	iapi.Conn.Dial(localEndpoint, http.Header{})
 
 	cli := &Client{
 		dotRpcClient: dotRpcClient,
 	}
 
+	fmt.Println(iapi, cli.dotRpcClient)
 	if err != nil {
 		_ = fmt.Errorf("err %v", err)
 	}
@@ -32,6 +41,16 @@ func main() {
 	}
 
 	fmt.Println("height", height)
+
+	blockResult := &irpc.JsonRpcResult{}
+
+	err = iws.SendWsRequest(nil, blockResult, irpc.ChainGetBlockHash(1, 1))
+	if err != nil {
+
+	}
+	fmt.Println(blockResult)
+	blockHash := blockResult.Result
+	fmt.Println(blockHash)
 
 }
 
