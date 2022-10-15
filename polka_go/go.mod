@@ -5,6 +5,7 @@ go 1.18
 require github.com/itering/substrate-api-rpc v0.4.14
 
 require (
+	github.com/centrifuge/go-substrate-rpc-client v2.0.0+incompatible
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.7
 	github.com/itering/scale.go v1.4.1
 	github.com/itering/subscan v0.1.0
