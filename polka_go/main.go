@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	dotKP "github.com/ChainSafe/gossamer/lib/crypto/ed25519"
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	irpc "github.com/itering/substrate-api-rpc/rpc"
 	"github.com/itering/substrate-api-rpc/websocket"
 	iws "github.com/itering/substrate-api-rpc/websocket"
 	"net/http"
+	"os"
 )
 
 const (
@@ -19,6 +21,7 @@ const (
 type Client struct {
 	latestBlock  *irpc.JsonRpcResult
 	dotRpcClient *gsrpc.SubstrateAPI
+	mnemonic     string
 }
 
 //system_syncState
@@ -34,12 +37,12 @@ func main() {
 	websocket.SetEndpoint(localEndpoint)
 	iapi, err := iws.Init()
 	iapi.Conn.Dial(localEndpoint, http.Header{})
-
+	mnemonic := os.Getenv("SIGNER_SEED_PHRASE")
 	cli := &Client{
 		dotRpcClient: dotRpcClient,
+		mnemonic:     mnemonic,
 	}
 
-	fmt.Println(iapi, cli.dotRpcClient)
 	if err != nil {
 		_ = fmt.Errorf("err %v", err)
 	}
@@ -65,7 +68,7 @@ func main() {
 	cli.latestBlock = blockResult
 
 	fmt.Println(cli.ToSyncState().CurrentBlock)
-
+	cli.GetEd25519Addr()
 }
 
 func (c *Client) GetHeight() (int64, error) {
@@ -105,4 +108,9 @@ func (p *Client) checkErr() error {
 		return errors.New(p.latestBlock.Error.Message)
 	}
 	return nil
+}
+
+func (p *Client) GetEd25519Addr() {
+	kp, _ := dotKP.NewKeypairFromMnenomic(p.mnemonic, "")
+	fmt.Printf("keypair %v", kp.Public().Address())
 }
