@@ -16,6 +16,7 @@ const (
 )
 
 func main() {
+
 	api, err := gsrpc.NewSubstrateAPI(westend)
 	if err != nil {
 		fmt.Errorf("error %w", err)
@@ -27,28 +28,8 @@ func main() {
 		fmt.Errorf("error %w", err)
 	}
 
-	genesisHash, err := api.RPC.Chain.GetBlockHash(0)
-	if err != nil {
-		fmt.Errorf("error %w", err)
-	}
-	//mnemonic := "entire material egg meadow latin bargain dutch coral blood melt acoustic thought"
-	mnemonic := "letter ethics correct bus asset pipe tourist vapor envelope kangaroo warm dawn"
-	kp, err := signature.KeyringPairFromSecret(mnemonic, 42)
+	dest, err := gsrpcTypes.NewMultiAddressFromHexAccountID("0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48")
 
-	aliceStorageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", kp.PublicKey)
-
-	if err != nil {
-		panic(err)
-	}
-
-	var accountInfo gsrpcTypes.AccountInfo
-	ok, err := api.RPC.State.GetStorageLatest(aliceStorageKey, &accountInfo)
-
-	if err != nil || !ok {
-		panic(err)
-	}
-
-	rv, err := api.RPC.State.GetRuntimeVersionLatest()
 	if err != nil {
 		panic(err)
 	}
@@ -69,11 +50,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	dest, err := gsrpcTypes.NewMultiAddressFromHexAccountID("0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48")
-
-	if err != nil {
-		panic(err)
-	}
 
 	call2, err := gsrpcTypes.NewCall(meta, "Balances.transfer", dest, gsrpcTypes.NewUCompactFromUInt(10000000000))
 	if err != nil {
@@ -85,8 +61,38 @@ func main() {
 		panic(err)
 	}
 
+	genesisHash, err := api.RPC.Chain.GetBlockHash(0)
+	if err != nil {
+		fmt.Errorf("error %w", err)
+	}
+
+	//mnemonic := "entire material egg meadow latin bargain dutch coral blood melt acoustic thought"
+	mnemonic := "letter ethics correct bus asset pipe tourist vapor envelope kangaroo warm dawn"
+	kp, err := signature.KeyringPairFromSecret(mnemonic, 42)
+	var sub *author.ExtrinsicStatusSubscription
+
+	//for {
+	aliceStorageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", kp.PublicKey)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var accountInfo gsrpcTypes.AccountInfo
+	ok, err := api.RPC.State.GetStorageLatest(aliceStorageKey, &accountInfo)
+
+	if err != nil || !ok {
+		panic(err)
+	}
+
+	rv, err := api.RPC.State.GetRuntimeVersionLatest()
+	if err != nil {
+		panic(err)
+	}
+
 	ext := gsrpcTypes.NewExtrinsic(batchCall)
 	nonce := uint32(accountInfo.Nonce)
+
 	signOpts := gsrpcTypes.SignatureOptions{
 		BlockHash:          genesisHash, // using genesis since we're using immortal era
 		Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
@@ -100,12 +106,16 @@ func main() {
 	if err := ext.Sign(kp, signOpts); err != nil {
 		panic(err)
 	}
-	var sub *author.ExtrinsicStatusSubscription
+
 	sub, err = api.RPC.Author.SubmitAndWatchExtrinsic(ext)
 
 	if err != nil {
-		panic(err)
+		fmt.Errorf("extrinsic submit failde %w", err)
+		//continue
 	}
+
+	//break
+	//}
 
 	defer sub.Unsubscribe()
 
