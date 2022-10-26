@@ -42,7 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	blockHash, err := api.RPC.Chain.GetBlockHash(5482576)
+	blockHash, err := api.RPC.Chain.GetBlockHash(12782886)
 	if err != nil {
 		panic(err)
 	}

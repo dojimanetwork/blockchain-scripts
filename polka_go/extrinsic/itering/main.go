@@ -35,7 +35,7 @@ func main() {
 	}
 	blockResult := &irpc.JsonRpcResult{}
 
-	err = iws.SendWsRequest(nil, blockResult, irpc.ChainGetBlockHash(12782886, 12782886))
+	err = iws.SendWsRequest(nil, blockResult, irpc.ChainGetBlockHash(12782886, 5482576))
 	if err != nil {
 
 	}
@@ -107,6 +107,7 @@ func decodeExtrinsics(list []string, metadata *iMetadata.Instant, spec int) (r [
 	for _, extrinsicRaw := range list {
 		//get fee
 		info, err := irpc.GetPaymentQueryInfo(nil, extrinsicRaw)
+		//https://docs.substrate.io/build/tx-weights-fees/
 		fmt.Println(info, err)
 		e := iScale.ExtrinsicDecoder{}
 		option := iTypes.ScaleDecoderOption{Metadata: &m, Spec: spec}
