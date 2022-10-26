@@ -6,7 +6,6 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/rpc/author"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	gsrpcTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"time"
 )
 
@@ -35,12 +34,12 @@ func main() {
 	}
 
 	memo := gsrpcTypes.NewData([]byte("memo:ADD:DOT.DOT:dojima1nh4y3gqxsn7ymm9t45zwsz3h8p9tm7pev8my62"))
-	memoBytes, err := codec.Encode(memo)
+	//memoBytes, err := codec.Encode(memo)
 	if err != nil {
 		panic(err)
 	}
 
-	call1, err := gsrpcTypes.NewCall(meta, "System.remark", memoBytes)
+	call1, err := gsrpcTypes.NewCall(meta, "System.remark", memo)
 	if err != nil {
 		panic(err)
 	}
@@ -71,51 +70,51 @@ func main() {
 	kp, err := signature.KeyringPairFromSecret(mnemonic, 42)
 	var sub *author.ExtrinsicStatusSubscription
 
-	//for {
-	aliceStorageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", kp.PublicKey)
+	for {
+		aliceStorageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", kp.PublicKey)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err)
+		}
+
+		var accountInfo gsrpcTypes.AccountInfo
+		ok, err := api.RPC.State.GetStorageLatest(aliceStorageKey, &accountInfo)
+
+		if err != nil || !ok {
+			panic(err)
+		}
+
+		rv, err := api.RPC.State.GetRuntimeVersionLatest()
+		if err != nil {
+			panic(err)
+		}
+
+		ext := gsrpcTypes.NewExtrinsic(batchCall)
+		nonce := uint32(accountInfo.Nonce)
+
+		signOpts := gsrpcTypes.SignatureOptions{
+			BlockHash:          genesisHash, // using genesis since we're using immortal era
+			Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
+			GenesisHash:        genesisHash,
+			Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(nonce)),
+			SpecVersion:        rv.SpecVersion,
+			Tip:                gsrpcTypes.NewUCompactFromUInt(0),
+			TransactionVersion: rv.TransactionVersion,
+		}
+
+		if err := ext.Sign(kp, signOpts); err != nil {
+			panic(err)
+		}
+
+		sub, err = api.RPC.Author.SubmitAndWatchExtrinsic(ext)
+
+		if err != nil {
+			fmt.Errorf("extrinsic submit failde %w", err)
+			continue
+		}
+
+		break
 	}
-
-	var accountInfo gsrpcTypes.AccountInfo
-	ok, err := api.RPC.State.GetStorageLatest(aliceStorageKey, &accountInfo)
-
-	if err != nil || !ok {
-		panic(err)
-	}
-
-	rv, err := api.RPC.State.GetRuntimeVersionLatest()
-	if err != nil {
-		panic(err)
-	}
-
-	ext := gsrpcTypes.NewExtrinsic(batchCall)
-	nonce := uint32(accountInfo.Nonce)
-
-	signOpts := gsrpcTypes.SignatureOptions{
-		BlockHash:          genesisHash, // using genesis since we're using immortal era
-		Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
-		GenesisHash:        genesisHash,
-		Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(nonce)),
-		SpecVersion:        rv.SpecVersion,
-		Tip:                gsrpcTypes.NewUCompactFromUInt(0),
-		TransactionVersion: rv.TransactionVersion,
-	}
-
-	if err := ext.Sign(kp, signOpts); err != nil {
-		panic(err)
-	}
-
-	sub, err = api.RPC.Author.SubmitAndWatchExtrinsic(ext)
-
-	if err != nil {
-		fmt.Errorf("extrinsic submit failde %w", err)
-		//continue
-	}
-
-	//break
-	//}
 
 	defer sub.Unsubscribe()
 
