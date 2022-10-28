@@ -16,7 +16,7 @@ const (
 
 func main() {
 
-	api, err := gsrpc.NewSubstrateAPI(westend)
+	api, err := gsrpc.NewSubstrateAPI(endpoint)
 	if err != nil {
 		fmt.Errorf("error %w", err)
 	}
@@ -33,13 +33,13 @@ func main() {
 		panic(err)
 	}
 
-	memo := gsrpcTypes.NewData([]byte("memo:ADD:DOT.DOT:dojima1nh4y3gqxsn7ymm9t45zwsz3h8p9tm7pev8my62"))
-	//memoBytes, err := codec.Encode(memo)
-	if err != nil {
-		panic(err)
-	}
+	//memo := gsrpcTypes.NewData([]byte("memo:ADD:DOT.DOT:dojima1nh4y3gqxsn7ymm9t45zwsz3h8p9tm7pev8my62"))
+	////memoBytes, err := codec.Encode(memo)
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	call1, err := gsrpcTypes.NewCall(meta, "System.remark", memo)
+	call1, err := gsrpcTypes.NewCall(meta, "System.remark", []byte("memo:ADD:DOT.DOT:dojima1nh4y3gqxsn7ymm9t45zwsz3h8p9tm7pev8my62"))
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +50,7 @@ func main() {
 		panic(err)
 	}
 
-	call2, err := gsrpcTypes.NewCall(meta, "Balances.transfer", dest, gsrpcTypes.NewUCompactFromUInt(10000000000))
+	call2, err := gsrpcTypes.NewCall(meta, "Balances.transfer", dest, gsrpcTypes.NewUCompactFromUInt(1000000))
 	if err != nil {
 		panic(err)
 	}
@@ -70,51 +70,55 @@ func main() {
 	kp, err := signature.KeyringPairFromSecret(mnemonic, 42)
 	var sub *author.ExtrinsicStatusSubscription
 
-	for {
-		aliceStorageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", kp.PublicKey)
+	//for {
+	aliceStorageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", kp.PublicKey)
 
-		if err != nil {
-			panic(err)
-		}
-
-		var accountInfo gsrpcTypes.AccountInfo
-		ok, err := api.RPC.State.GetStorageLatest(aliceStorageKey, &accountInfo)
-
-		if err != nil || !ok {
-			panic(err)
-		}
-
-		rv, err := api.RPC.State.GetRuntimeVersionLatest()
-		if err != nil {
-			panic(err)
-		}
-
-		ext := gsrpcTypes.NewExtrinsic(batchCall)
-		nonce := uint32(accountInfo.Nonce)
-
-		signOpts := gsrpcTypes.SignatureOptions{
-			BlockHash:          genesisHash, // using genesis since we're using immortal era
-			Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
-			GenesisHash:        genesisHash,
-			Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(nonce)),
-			SpecVersion:        rv.SpecVersion,
-			Tip:                gsrpcTypes.NewUCompactFromUInt(0),
-			TransactionVersion: rv.TransactionVersion,
-		}
-
-		if err := ext.Sign(kp, signOpts); err != nil {
-			panic(err)
-		}
-
-		sub, err = api.RPC.Author.SubmitAndWatchExtrinsic(ext)
-
-		if err != nil {
-			fmt.Errorf("extrinsic submit failde %w", err)
-			continue
-		}
-
-		break
+	if err != nil {
+		panic(err)
 	}
+
+	var accountInfo gsrpcTypes.AccountInfo
+	ok, err := api.RPC.State.GetStorageLatest(aliceStorageKey, &accountInfo)
+
+	if err != nil || !ok {
+		panic(err)
+	}
+
+	rv, err := api.RPC.State.GetRuntimeVersionLatest()
+	if err != nil {
+		panic(err)
+	}
+
+	ext := gsrpcTypes.NewExtrinsic(batchCall)
+	nonce := uint32(accountInfo.Nonce)
+
+	signOpts := gsrpcTypes.SignatureOptions{
+		BlockHash:          genesisHash, // using genesis since we're using immortal era
+		Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
+		GenesisHash:        genesisHash,
+		Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(nonce)),
+		SpecVersion:        rv.SpecVersion,
+		Tip:                gsrpcTypes.NewUCompactFromUInt(0),
+		TransactionVersion: rv.TransactionVersion,
+	}
+
+	if err := ext.Sign(kp, signOpts); err != nil {
+		panic(err)
+	}
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	sub, err = api.RPC.Author.SubmitAndWatchExtrinsic(ext)
+
+	if err != nil {
+		fmt.Printf("extrinsic submit failde %v", err)
+		//continue
+	}
+
+	//	break
+	//}
 
 	defer sub.Unsubscribe()
 

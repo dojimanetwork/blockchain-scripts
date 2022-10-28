@@ -9,6 +9,7 @@ require (
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.8
 	github.com/itering/scale.go v1.4.1
 	github.com/itering/subscan v0.1.0
+	github.com/vedhavyas/go-subkey v1.0.3
 )
 
 require (
@@ -44,7 +45,6 @@ require (
 	github.com/rs/cors v1.8.2 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/vedhavyas/go-subkey v1.0.3 // indirect
 	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2 // indirect
 	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
