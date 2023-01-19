@@ -1,12 +1,13 @@
 import CreateInstance from '../instance'
 import {ApiPromise} from '@polkadot/api'
+import type { AnyNumber, Codec } from '@polkadot/types-codec/types'
 import '@polkadot/api-augment'
 
 (async () => {
     const inst: ApiPromise = await CreateInstance()
-
+    const block_no = process.env.BLOCK_NO as AnyNumber
     // returns Hash
-    const blockHash = await inst.rpc.chain.getBlockHash(12782886);
+    const blockHash = await inst.rpc.chain.getBlockHash(block_no);
     // returns SignedBlock
     const signedBlock = await inst.rpc.chain.getBlock(blockHash);
     const apiAt = await inst.at(signedBlock.block.header.hash);

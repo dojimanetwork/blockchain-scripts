@@ -10,20 +10,21 @@
   },
   "dependencies": {
     "@polkadot/api": "^9.4.3",
+    "dotenv": "^16.0.3",
     "ts-node": "^10.9.1"
   },
   "scripts": {
-    "runtime-constants": "ts-node ./runtime-constants/index.ts",
-    "state-queries": "ts-node ./state-queries/index.ts",
-    "rpc-queries": "ts-node ./rpc-queries/index.ts",
-    "block-subscription": "ts-node ./rpc-queries/block-subscription.ts",
-    "adderss": "ts-node ./account/address.ts",
-    "verify-signature": "ts-node ./account/signature.ts",
-    "transfer": "ts-node ./tx/index.ts",
-    "remark": "ts-node ./system/remark.ts",
-    "batch": "ts-node ./utility/index.ts",
-    "block": "ts-node ./rpc-queries/block.ts",
-    "estimate": "ts-node ./tx/estimate.ts"
-
+    "runtime-constants": "ts-node -r dotenv/config ./runtime-constants/index.ts",
+    "balance": "ts-node -r dotenv/config ./state-queries/index.ts",
+    "rpc-queries": "ts-node -r dotenv/config ./rpc-queries/index.ts",
+    "block-subscription": "ts-node -r dotenv/config ./rpc-queries/block-subscription.ts",
+    "adderss": "ts-node -r dotenv/config ./account/address.ts",
+    "verify-signature": "ts-node -r dotenv/config ./account/signature.ts",
+    "transfer": "ts-node -r dotenv/config ./tx/index.ts",
+    "remark": "ts-node -r dotenv/config ./system/remark.ts",
+    "add_liqudity": "ts-node -r dotenv/config ./utility/index.ts",
+    "swap": "ts-node -r dotenv/config ./utility/swap.ts",
+    "block": "ts-node -r dotenv/config ./rpc-queries/block.ts",
+    "estimate": "ts-node -r dotenv/config ./tx/estimate.ts"
   }
 }

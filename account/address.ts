@@ -4,7 +4,7 @@ import MnemonicAccount from './with-seed';
 (async () => {
     await CreateInstance()
     // Some mnemonic phrase
-    const mnemonic = 'entire material egg meadow latin bargain dutch coral blood melt acoustic thought';
+    const mnemonic = process.env.MNEMONIC as string;
     const keypair = await MnemonicAccount({mnemonic})
 
     // Log some info

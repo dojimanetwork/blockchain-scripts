@@ -3,22 +3,24 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"math/big"
+	"strconv"
+	"strings"
+
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/scale"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"github.com/vedhavyas/go-subkey"
-	"math/big"
-	"strconv"
-	"strings"
 )
 
 const (
 	westend = "wss://westend-rpc.polkadot.io"
+	local   = "ws://localhost:9944"
 )
 
 func main() {
-	api, err := gsrpc.NewSubstrateAPI(westend)
+	api, err := gsrpc.NewSubstrateAPI(local)
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +44,8 @@ func main() {
 		panic(err)
 	}
 
-	blockHash, err := api.RPC.Chain.GetBlockHash(12782886)
+	blockHash, err := api.RPC.Chain.GetBlockHash(13572508)
+	fmt.Println(blockHash)
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +95,7 @@ func main() {
 			panic(err)
 		}
 		adjustedWeightFee = adjustedWeightFee.SetInt64(adjustedWeightFeeStrConv)
-		//fmt.Println("BXL:  adjustedWeightFee: ", adjustedWeightFee)
+		// fmt.Println("BXL:  adjustedWeightFee: ", adjustedWeightFee)
 
 		baseFee := new(big.Int)
 		baseFeeStrConv, err := strconv.ParseInt(hexaNumberToInteger(resInter.InclusionFee.BaseFee), 16, 64)
@@ -100,7 +103,7 @@ func main() {
 			panic(err)
 		}
 		baseFee = baseFee.SetInt64(baseFeeStrConv)
-		//fmt.Println("BXL:  baseFee: ", baseFee)
+		// fmt.Println("BXL:  baseFee: ", baseFee)
 
 		lenFee := new(big.Int)
 		lenFeeStrConv, err := strconv.ParseInt(hexaNumberToInteger(resInter.InclusionFee.LenFee), 16, 64)
@@ -108,12 +111,12 @@ func main() {
 			panic(err)
 		}
 		lenFee = lenFee.SetInt64(lenFeeStrConv)
-		//fmt.Println("BXL:  lenFee: ", lenFee)
+		// fmt.Println("BXL:  lenFee: ", lenFee)
 
 		partialFeeCal := new(big.Int)
 		partialFeeCal = partialFeeCal.Add(baseFee, lenFee)
 		partialFeeCal = partialFeeCal.Add(partialFeeCal, adjustedWeightFee)
-		//fmt.Println("BXL:  partialFeeCal: ", partialFeeCal)
+		// fmt.Println("BXL:  partialFeeCal: ", partialFeeCal)
 
 		feeRateCal := new(big.Int)
 
@@ -124,7 +127,7 @@ func main() {
 		feeRateCal = feeRateCal.Add(baseFee, adjustedWeightFee)
 		fmt.Println("BXL:  feeRateCal: ", feeRateCal)
 		decoder := scale.NewDecoder(bytes.NewReader(ext.Method.Args))
-		//accountID := ext.Signature.Signer.AsID
+		// accountID := ext.Signature.Signer.AsID
 		sender, _ := subkey.SS58Address(ext.Signature.Signer.AsID[:], uint8(42))
 		fmt.Println("BXL: sender: ", sender, "")
 		ncalls, err := decoder.DecodeUintCompact()
@@ -161,32 +164,32 @@ func main() {
 					}
 				}
 			}
-			//for _, callArg := range callFunction.Args {
+			// for _, callArg := range callFunction.Args {
 			//	if callArg.Type == "<T::Lookup as StaticLookup>::Source" {
-			//argValue1 := types.AccountID{}
-			//_ = decoder.Decode(&argValue1)
-			//// https://github.com/paritytech/substrate/blob/master/ss58-registry.json
-			//ss58, _ := subkey.SS58Address(argValue1[:], uint8(42))
-			//fmt.Println(" dest = ", ss58)
+			// argValue1 := types.AccountID{}
+			// _ = decoder.Decode(&argValue1)
+			// // https://github.com/paritytech/substrate/blob/master/ss58-registry.json
+			// ss58, _ := subkey.SS58Address(argValue1[:], uint8(42))
+			// fmt.Println(" dest = ", ss58)
 			//
-			////} else if callArg.Type == "Compact<T::Balance>" {
-			//argValue2 := types.U128{}
-			//_ = decoder.Decode(&argValue2)
-			//fmt.Println(" = ", argValue2)
-			//} else if callArg.Type == "Vec<u8>" {
+			// //} else if callArg.Type == "Compact<T::Balance>" {
+			// argValue2 := types.U128{}
+			// _ = decoder.Decode(&argValue2)
+			// fmt.Println(" = ", argValue2)
+			// } else if callArg.Type == "Vec<u8>" {
 			//	var argValue = types.Bytes{}
 			//	// hex.DecodeString(a.Value.(string))
 			//	_ = decoder.Decode(&argValue)
 			//	value := string(argValue)
 			//	fmt.Println("BXL: FetchTxs: Vec<u8> ", callArg.Name, "memo =", value)
 			//
-			//} else {
+			// } else {
 			//	var argValue = types.Bytes{}
 			//	_ = decoder.Decode(&argValue)
 			//	fmt.Println("BXL: FetchTxs: UNKNOWN argValue", callArg.Name, "=", argValue)
 			//
-			//}
-			//}
+			// }
+			// }
 		}
 
 	}
@@ -194,7 +197,7 @@ func main() {
 }
 
 func findModule(metadata *types.Metadata, index types.CallIndex) types.FunctionMetadataV4 {
-	//fmt.Println(metadata.AsMetadataV14.Extrinsic)
+	// fmt.Println(metadata.AsMetadataV14.Extrinsic)
 	if metadata.Version == 14 {
 		for _, mod := range metadata.AsMetadataV14.Pallets {
 			if uint8(mod.Index) == index.SectionIndex {

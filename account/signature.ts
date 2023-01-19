@@ -6,7 +6,7 @@ import MnemonicAccount from './with-seed';
 (async () => {
     // Some mnemonic phrase
     await CreateInstance()
-    const mnemonic = 'entire material egg meadow latin bargain dutch coral blood melt acoustic thought';
+    const mnemonic = process.env.MNEMONIC as string;
     const keypair = await MnemonicAccount({mnemonic})
 
     const message = stringToU8a("testing the signature")

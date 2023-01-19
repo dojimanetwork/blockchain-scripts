@@ -5,11 +5,13 @@ import MnemonicAccount from '../account/with-seed';
 (async () => {
     const inst: ApiPromise = await CreateInstance()
     // Some mnemonic phrase
-    const mnemonic = 'letter ethics correct bus asset pipe tourist vapor envelope kangaroo warm dawn';
+    const mnemonic = process.env.MNEMONIC as string;
+    const to_address = process.env.TO_ADDRESS as string;
+    const amt = process.env.AMOUNT as string
     const keypair = await MnemonicAccount({mnemonic})
 
     const info = await inst.tx.utility.batchAll(
-        [inst.tx.system.remark("testing"), inst.tx.balances.transfer('5DTestUPts3kjeXSTMyerHihn1uwMfLj8vU8sqF7qYrFabHE', 10000000)
+        [inst.tx.system.remark("testing"), inst.tx.balances.transfer(to_address, amt)
         ]).paymentInfo(keypair)
 
     // log relevant info, partialFee is Balance, estimated for current
