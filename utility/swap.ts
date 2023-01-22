@@ -15,13 +15,11 @@ import MnemonicAccount from '../account'
         [inst.tx.system.remark(memo), inst.tx.balances.transfer(to_address, amt)
         ])
         .signAndSend(keypair, (result: SubmittableResult)=> {
-            console.log("Current status is", result.status);
-
             if (result.status.isInBlock) {
-                console.log('Transaction included in blockhash', result.status.asInBlock);
+                console.log('Transaction included in blockhash: ', "block hash - ",result.status.asInBlock.toString());
             } else if(result.status.isFinalized) {
-                console.log(`Transation finalized at blockhash`, result.status.asFinalized);
-                console.log("transaction hash", result.txHash);
+                console.log(`Transation finalized at blockhash`, result.status.asFinalized.toString());
+                console.log("transaction hash", result.txHash.toString());
 
                 result.events.forEach((value) => {
                     console.log("\t", value.phase, ":", value.event.section, ".", value.event.method, "::::", value.event.data);
