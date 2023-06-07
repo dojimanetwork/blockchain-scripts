@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	gsrpc "github.com/dojimanetwork/go-polka-rpc/v5"
 	"github.com/dojimanetwork/go-polka-rpc/v5/rpc/author"
 	"github.com/dojimanetwork/go-polka-rpc/v5/signature"
@@ -21,8 +20,8 @@ const (
 func main() {
 	log := log.Logger.With().Str("module", "polkadot").Logger()
 	api, err := gsrpc.NewSubstrateAPI(endpoint)
-	opts := types.SerDeOptions{NoPalletIndices: true}
-	types.SetSerDeOptions(opts)
+	opts := gsrpcTypes.SerDeOptions{NoPalletIndices: true}
+	gsrpcTypes.SetSerDeOptions(opts)
 	if err != nil {
 		log.Info().Err(err).Msg("api not initilaized")
 	}
