@@ -15,11 +15,12 @@ import (
 const (
 	endpoint = "wss://dotws-test.h4s.dojima.network:9944"
 	westend  = "wss://westend-rpc.polkadot.io"
+	local    = "ws://localhost:9944"
 )
 
 func main() {
 	log := log.Logger.With().Str("module", "polkadot").Logger()
-	api, err := gsrpc.NewSubstrateAPI(endpoint)
+	api, err := gsrpc.NewSubstrateAPI(local)
 	opts := gsrpcTypes.SerDeOptions{NoPalletIndices: true}
 	gsrpcTypes.SetSerDeOptions(opts)
 	if err != nil {
@@ -46,9 +47,9 @@ func main() {
 
 	// keyringPair := signature.KeyringPair{Address: kp.Public().Hex(), PublicKey: kp.Public().Encode(), URI: mnemonic}
 
-	if err != nil {
-		panic(err)
-	}
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	// bal, ok := new(big.Int).SetString("246506515540", 10)
 	amount := gsrpcTypes.NewUCompactFromUInt(346506515540)
@@ -69,7 +70,15 @@ func main() {
 		fmt.Errorf("error %w", err)
 	}
 
-	mnemonic := "hero eagle luxury slight survey catch toy goat model general alarm inner"
+	// Secret phrase:       flee feel soup spend ridge oyster banner wrestle program uncover awkward blossom
+	// Network ID:        substrate
+	// Secret seed:       0x7c18736b2507a9349098e3e0ef05b068f84d601f1d59e351e2cd0bcd15bdab10
+	// Public key (hex):  0x764f7f44a70087004208b71fb21dbaf0dbd2e7bc5bbc2be45f1afc663063e936
+	// Account ID:        0x764f7f44a70087004208b71fb21dbaf0dbd2e7bc5bbc2be45f1afc663063e936
+	// Public key (SS58): 5Ejq86Vc2ThL8L7grBJHqiRXUg5aNE5bVY1r6wA9RLKtELiE
+	// SS58 Address:      5Ejq86Vc2ThL8L7grBJHqiRXUg5aNE5bVY1r6wA9RLKtELiE
+
+	mnemonic := "flee feel soup spend ridge oyster banner wrestle program uncover awkward blossom"
 	// mnemonic := "letter ethics correct bus asset pipe tourist vapor envelope kangaroo warm dawn"
 	kp, err := signature.KeyringPairFromSecret(mnemonic, 42)
 	var sub *author.ExtrinsicStatusSubscription
@@ -95,13 +104,13 @@ func main() {
 	}
 
 	ext := gsrpcTypes.NewExtrinsic(batchCall)
-	// nonce := uint32(accountInfo.Nonce)
+	nonce := uint32(accountInfo.Nonce)
 	fmt.Println(ext)
 	signOpts := gsrpcTypes.SignatureOptions{
 		BlockHash:          genesisHash, // using genesis since we're using immortal era
 		Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
 		GenesisHash:        genesisHash,
-		Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(0)),
+		Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(nonce)),
 		SpecVersion:        rv.SpecVersion,
 		Tip:                gsrpcTypes.NewUCompactFromUInt(0),
 		TransactionVersion: rv.TransactionVersion,

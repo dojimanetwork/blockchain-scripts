@@ -46,7 +46,19 @@ func main() {
 		TransactionVersion: runtimeVersion.TransactionVersion,
 	}
 	call := CreateBalanceCall(metadata, bobSr25519, 1)
-	ext := types.NewExtrinsic(call)
+	memo := []byte("memo:OUT:E250EBC0EBF271ED23C41B23D5024C65BAE5563819F7537E63605EEA86485839")
+	call1, err := types.NewCall(metadata, "System.remark", memo)
+
+	if err != nil {
+		panic(err)
+	}
+
+	batchCall, err := types.NewCall(metadata, "Utility.batch_all", []types.Call{call1, call})
+	if err != nil {
+		panic(err)
+	}
+
+	ext := types.NewExtrinsic(batchCall)
 
 	edExt := polkadot.Edd25519_Extrinsic{
 		Extrinsic: ext,
