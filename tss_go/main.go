@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -15,7 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	secp256k1 "github.com/btcsuite/btcd/btcec"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/decred/dcrd/dcrec/edwards/v2"
 	"github.com/dojimanetwork/dojima-tss/common"
 	"github.com/dojimanetwork/dojima-tss/conversion"
@@ -26,14 +28,16 @@ import (
 	"github.com/dojimanetwork/go-polka-rpc/v5/rpc/author"
 	"github.com/dojimanetwork/go-polka-rpc/v5/signature"
 	gsrpcTypes "github.com/dojimanetwork/go-polka-rpc/v5/types"
+	"github.com/dojimanetwork/go-polka-rpc/v5/types/codec"
+	"github.com/dojimanetwork/go-subkey"
 	common2 "github.com/dojimanetwork/hermes/common"
 	"github.com/dojimanetwork/hermes/common/cosmos"
 	"github.com/dojimanetwork/hermes/narada/chainclients/polkadot"
 	btsskeygen "github.com/dojimanetwork/tss-lib/ecdsa/keygen"
-	btss "github.com/dojimanetwork/tss-lib/tss"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/crypto/ed25519"
+	"github.com/tendermint/btcd/btcec"
+	"golang.org/x/crypto/blake2b"
 )
 
 const (
@@ -44,6 +48,15 @@ const (
 	// as bytes.
 	fieldIntSize = 32
 )
+
+// PrivateKeyLength is the fixed Private Key Length
+const PrivateKeyLength = 32
+
+// SignatureLength is the fixed Signature Length
+const SignatureLength = 64
+
+// MessageLength is the fixed Message Length
+const MessageLength = 32
 
 var (
 	testPubKeys = []string{
@@ -74,10 +87,14 @@ type FourNodeTestSuite struct {
 	bootstrapPeer string
 	algo          string
 	polkaApi      gsrpc.SubstrateAPI
-	ed25519PubKey ed25519.PublicKey
+	ed25519PubKey secp256k1.PublicKey
 	poolPubkey    string
 	sigOpts       gsrpcTypes.SignatureOptions
 	extrinsic     gsrpcTypes.Extrinsic
+}
+
+type EcdsaExtrinsic struct {
+	Extrinsic gsrpcTypes.Extrinsic
 }
 
 func main() {
@@ -131,8 +148,7 @@ func main() {
 		}
 	}
 
-	s.algo = "eddsa"
-	btss.SetCurve(edwards.Edwards())
+	s.algo = "ecdsa"
 	s.KeygenAndKeySign(true)
 }
 
@@ -174,10 +190,10 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 			}
 		}
 	}
-	s.poolPubkey = poolPubKey
+
 	pubkey, err := common2.NewPubKey(poolPubKey)
 
-	log.Info().Interface("ed25519 pubkey", pubkey).Msg("POLKA::::")
+	log.Info().Interface("ecdsa pubkey", pubkey).Msg("POLKA::::")
 
 	if err != nil {
 		panic(err)
@@ -186,25 +202,40 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 	address, err := pubkey.GetAddress(common2.DOTCHAIN)
 	log.Info().Interface("dot address", address).Msg("POLKA::::")
 
-	ed25519PubKey, err := pubkey.GetEd25519PubK()
-	s.ed25519PubKey = ed25519PubKey
+	// ed25519PubKey, err := pubkey.GetSecpk1PubK()
+
 	if err != nil {
 		panic(err)
 	}
 
+	// metadata
 	meta, err := s.polkaApi.RPC.State.GetMetadataLatest()
 
 	if err != nil {
 		panic(err)
 	}
 
+	// transfer dot to tss pubkey address
 	s.transferToPubAddress(address.String(), meta)
+
+	// cosmos pukey
+	unmarshal := GetPubKeyBytes(poolPubKey)
+	// get secp publickey
+	secpPub, err := common2.SecpPubkey(unmarshal)
+
+	if err != nil {
+		panic(fmt.Sprintf("failed get pubkey from unmarshal:%v", err))
+	}
+
+	// get account id bytes
+	pubEncode := pubkey.SecpEncode(secpPub.ToECDSA())
+	accountId := pubkey.SecpAccountId(pubEncode)
 
 	var accountInfo gsrpcTypes.AccountInfo
 
 	for i := 0; i < 5; i++ {
 		// create storage key
-		storageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", ed25519PubKey)
+		storageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", accountId)
 		if err != nil {
 			fmt.Errorf("failed to get storage key")
 			time.Sleep(time.Second * 3)
@@ -220,14 +251,118 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 
 		time.Sleep(time.Second * 3)
 	}
-	sigOpts, extrinsic := s.getPolkaMsgToSign(meta)
-	s.sigOpts = sigOpts
-	s.extrinsic = extrinsic
-	payload, err := polkadot.GetEd25519Payload(extrinsic, sigOpts)
+
+	// balance call
+	dest, err := gsrpcTypes.NewMultiAddressFromHexAccountID("0x7a99a7227cd7ddf60976d0c2725b627b35968b51c35e2dc3572c9464e91c1b2b")
+	if err != nil {
+		panic(err)
+	}
+
+	amount := gsrpcTypes.NewUCompactFromUInt(10000000000000)
+	call2, err := gsrpcTypes.NewCall(meta, "Balances.transfer", dest, amount)
+	if err != nil {
+		panic(err)
+	}
+
+	// remark call
+	memo := []byte("TSS:EDDSA:TEST:E250EBC0EBF271ED23C41B23D5024C65BAE5563819F7537E63605EEA86485839")
+	call1, err := gsrpcTypes.NewCall(meta, "System.remark", memo)
 
 	if err != nil {
 		panic(err)
 	}
+
+	// batch call
+	batchCall, err := gsrpcTypes.NewCall(meta, "Utility.batch_all", []gsrpcTypes.Call{call1, call2})
+	if err != nil {
+		panic(err)
+	}
+
+	// extrinsic
+	extrinsic := gsrpcTypes.NewExtrinsic(batchCall)
+
+	// genesis hash
+	genesisHash, err := s.polkaApi.RPC.Chain.GetBlockHash(0)
+
+	if err != nil {
+		fmt.Errorf("error %w", err)
+	}
+
+	// runtime version
+	rv, err := s.polkaApi.RPC.State.GetRuntimeVersionLatest()
+	// log.Info().Interface("runtime call", rv).Msg("runtime details")
+	if err != nil {
+		panic(err)
+	}
+
+	nonce := accountInfo.Nonce
+
+	signatureOpts := gsrpcTypes.SignatureOptions{
+		BlockHash:          genesisHash, // using genesis since we're using immortal era
+		Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
+		GenesisHash:        genesisHash,
+		Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(nonce)),
+		SpecVersion:        rv.SpecVersion,
+		Tip:                gsrpcTypes.NewUCompactFromUInt(0),
+		TransactionVersion: rv.TransactionVersion,
+	}
+
+	if extrinsic.Type() != gsrpcTypes.ExtrinsicVersion4 {
+		panic(fmt.Errorf("unsupported extrinsic version: %v (isSigned: %v, type: %v)", extrinsic.Version, extrinsic.IsSigned(), extrinsic.Type()))
+	}
+
+	mb, err := codec.Encode(extrinsic.Method)
+	if err != nil {
+		panic(fmt.Sprintf("failed to encode method:%v", err))
+	}
+
+	era := signatureOpts.Era
+	if !signatureOpts.Era.IsMortalEra {
+		era = gsrpcTypes.ExtrinsicEra{IsImmortalEra: true}
+	}
+
+	payload := gsrpcTypes.ExtrinsicPayloadV4{
+		ExtrinsicPayloadV3: gsrpcTypes.ExtrinsicPayloadV3{
+			Method:      mb,
+			Era:         era,
+			Nonce:       signatureOpts.Nonce,
+			Tip:         signatureOpts.Tip,
+			SpecVersion: signatureOpts.SpecVersion,
+			GenesisHash: signatureOpts.GenesisHash,
+			BlockHash:   signatureOpts.BlockHash,
+		},
+		TransactionVersion: signatureOpts.TransactionVersion,
+	}
+
+	srcPubkey, err := codec.HexDecodeString(subkey.EncodeHex(accountId))
+	if err != nil {
+		panic(fmt.Sprintf("failed to convert accountid to hex string:%v", err))
+	}
+
+	signerPubKey, err := gsrpcTypes.NewMultiAddressFromAccountID(srcPubkey)
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to get signer pubkey:%v", err))
+	}
+
+	b, err := codec.Encode(payload)
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to encode payload:%v", err))
+	}
+
+	// if data is longer than 256 bytes, hash it first
+	if len(b) > 256 {
+		h := blake2b.Sum256(b)
+		b = h[:]
+	}
+
+	digest := blake2b.Sum256(b)
+
+	if err != nil {
+		panic(err)
+	}
+
 	// payload := hash([]byte("helloworld"))
 	keysignResult := make(map[int]keysign.Response)
 	for i := 0; i < partyNum; i++ {
@@ -237,9 +372,9 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 			localPubKeys := append([]string{}, testPubKeys...)
 			var keysignReq keysign.Request
 			if newJoinParty {
-				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(hash(payload))}, 10, localPubKeys, "0.14.0", s.algo)
+				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(digest[:])}, 10, localPubKeys, "0.14.0", s.algo)
 			} else {
-				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(hash(payload))}, 10, localPubKeys, "0.13.0", s.algo)
+				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(digest[:])}, 10, localPubKeys, "0.13.0", s.algo)
 			}
 			res, err := s.servers[idx].KeySign(keysignReq)
 			if err != nil {
@@ -252,84 +387,78 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 	}
 	wg.Wait()
 
-	s.checkSignResult(keysignResult, poolPubKey)
-}
+	// s.checkSignResult(keysignResult, poolPubKey)
 
-func GetPubKeyBytes(pubkey string) []byte {
-	unmarshal, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, pubkey)
-	if err != nil {
-		panic(fmt.Sprintf("unmarshal pubkey %v", err))
-	}
-
-	return unmarshal.Bytes()
-}
-
-func (s *FourNodeTestSuite) checkSignResult(keysignResult map[int]keysign.Response, poolPubkey string) {
-	var signature gsrpcTypes.Signature
+	var signature gsrpcTypes.EcdsaSignature
 out:
 	for i := 0; i < len(keysignResult)-1; i++ {
 		currentSignatures := keysignResult[i].Signatures
 		for j := 0; j <= len(currentSignatures)-1; j++ {
-			sigBytes, sig, err := getSignature(currentSignatures[j].R, currentSignatures[j].S)
+			sigBytes, err := getEcdsaSignature(currentSignatures[j].R, currentSignatures[j].S)
 			if err != nil {
-
+				panic(fmt.Sprintf("failed to get signature:%v", err))
 			}
 
-			pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, poolPubkey)
+			bRecoveryId, err := base64.StdEncoding.DecodeString(currentSignatures[j].RecoveryID)
 			if err != nil {
-
+				panic(fmt.Sprintf("failed to get recovery id:%v", err))
 			}
 
-			edPubK, err := edwards.ParsePubKey(pk.Bytes())
-
-			if err != nil {
-				fmt.Errorf("inval ed25519 key with error %w", err)
+			// buf, err := base64.StdEncoding.DecodeString(currentSignatures[j].Msg)
+			if len(sigBytes) != SignatureLength {
+				panic(errors.New("invalid signature length"))
 			}
 
-			buf, err := base64.StdEncoding.DecodeString(currentSignatures[j].Msg)
-			verify := edwards.Verify(edPubK, buf, sigBytes.R, sigBytes.S)
+			// if len(buf) != MessageLength {
+			// 	panic(errors.New("invalid message length: not 32 byte hash"))
+			// }
 
-			if verify {
+			// edPubK, err := edwards.ParsePubKey(pk.Bytes())
+			//
+			// if err != nil {
+			// 	fmt.Errorf("inval ed25519 key with error %w", err)
+			// }
 
-				signature = gsrpcTypes.NewSignature(sig)
-				break out
-			}
+			// verify := edwards.Verify(edPubK, buf, sigBytes.R, sigBytes.S)
+
+			// verify := gethSecp.VerifySignature(secpPub.SerializeUncompressed(), buf, sigBytes)
+			// if verify {
+			// add the recovery id at the end
+			result := make([]byte, 65)
+			copy(result, sigBytes)
+			result[64] = bRecoveryId[0]
+			signature = gsrpcTypes.NewEcdsaSignature(result)
+			break out
+			// }
 
 		}
 	}
 
-	multiSig := gsrpcTypes.MultiSignature{IsEd25519: true, AsEd25519: signature}
-
-	multiSigPubkey, err := gsrpcTypes.NewMultiAddressFromAccountID(GetPubKeyBytes(s.poolPubkey))
+	multiSig := gsrpcTypes.MultiSignature{IsEcdsa: true, AsEcdsa: signature}
 
 	if err != nil {
 		panic(fmt.Sprintf("failed to create new account id %v", err))
 	}
 
 	extSig := gsrpcTypes.ExtrinsicSignatureV4{
-		Signer:    multiSigPubkey,
+		Signer:    signerPubKey,
 		Signature: multiSig,
-		Era:       s.sigOpts.Era,
-		Nonce:     s.sigOpts.Nonce,
-		Tip:       s.sigOpts.Tip,
+		Era:       era,
+		Nonce:     signatureOpts.Nonce,
+		Tip:       signatureOpts.Tip,
 	}
 
-	s.extrinsic.Signature = extSig
+	extrinsic.Signature = extSig
 
-	s.extrinsic.Version |= gsrpcTypes.ExtrinsicBitSigned
+	extrinsic.Version |= gsrpcTypes.ExtrinsicBitSigned
 
-	// enc, err := codec.EncodeToHex(signature)
-	//
+	var sub *author.ExtrinsicStatusSubscription
+
+	// hash, err := s.polkaApi.RPC.Author.SubmitExtrinsic(extrinsic)
 	// if err != nil {
-	// 	panic(fmt.Sprintf("failed to encode to hex %v", err))
+	// 	panic(err)
 	// }
-	//
-	// sub, err := s.polkaApi.RPC.Author.SubmitBytesAndWatchExtrinsic(enc)
-
-	// var sub *author.ExtrinsicStatusSubscription
-
-	hash, err := s.polkaApi.RPC.Author.SubmitExtrinsic(s.extrinsic)
-	fmt.Println(hash)
+	// fmt.Printf("Transfer sent with extrinsic hash %#x\n", hash)
 	// if err != nil {
 	// 	panic(err)
 	// 	// continue
@@ -339,19 +468,64 @@ out:
 	// 	panic(fmt.Sprintf("failed to subscribe %v", err))
 	// }
 	//
-	// defer sub.Unsubscribe()
-	//
-	// select {
-	// case <-time.After(1 * time.Minute):
-	// 	panic("Timeout reached")
-	// case st := <-sub.Chan():
-	// 	extStatus, _ := st.MarshalJSON()
-	// 	fmt.Println("Done with status -", string(extStatus))
-	// 	return
-	// case err := <-sub.Err():
-	// 	panic(err)
-	// }
 
+	sub, err = s.polkaApi.RPC.Author.SubmitAndWatchExtrinsic(extrinsic)
+	defer sub.Unsubscribe()
+
+	select {
+	case <-time.After(1 * time.Minute):
+		panic("Timeout reached")
+	case st := <-sub.Chan():
+		extStatus, _ := st.MarshalJSON()
+		fmt.Println("Done with status -", string(extStatus))
+		return
+	case err := <-sub.Err():
+		panic(err)
+	}
+}
+
+func GetPubKeyBytes(pubkey string) types.PubKey {
+	unmarshal, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, pubkey)
+	if err != nil {
+		panic(fmt.Sprintf("unmarshal pubkey %v", err))
+	}
+
+	return unmarshal
+}
+
+func (s *FourNodeTestSuite) checkSignResult(keysignResult map[int]keysign.Response, poolPubkey string) {
+
+}
+
+func getEcdsaSignature(r, s string) ([]byte, error) {
+	rBytes, err := base64.StdEncoding.DecodeString(r)
+	if err != nil {
+		return nil, err
+	}
+	sBytes, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+
+	R := new(big.Int).SetBytes(rBytes)
+	S := new(big.Int).SetBytes(sBytes)
+	N := btcec.S256().N
+	halfOrder := new(big.Int).Rsh(N, 1)
+	// see: https://github.com/ethereum/go-ethereum/blob/f9401ae011ddf7f8d2d95020b7446c17f8d98dc1/crypto/signature_nocgo.go#L90-L93
+	if S.Cmp(halfOrder) == 1 {
+		S.Sub(N, S)
+	}
+
+	// Serialize signature to R || S.
+	// R, S are padded to 32 bytes respectively.
+	rBytes = R.Bytes()
+	sBytes = S.Bytes()
+
+	sigBytes := make([]byte, 64)
+	// 0 pad the byte arrays from the left if they aren't big enough.
+	copy(sigBytes[32-len(rBytes):32], rBytes)
+	copy(sigBytes[64-len(sBytes):64], sBytes)
+	return sigBytes, nil
 }
 
 func getSignature(r, s string) (*edwards.Signature, []byte, error) {
@@ -545,74 +719,6 @@ func (s *FourNodeTestSuite) transferToPubAddress(address string, meta *gsrpcType
 		panic(err)
 	}
 
-}
-
-func (s *FourNodeTestSuite) getPolkaMsgToSign(meta *gsrpcTypes.Metadata) (gsrpcTypes.SignatureOptions, gsrpcTypes.Extrinsic) {
-	hexaAddr := strings.Join([]string{"0x", "d2c2e63069b7422f37f5c6bb6cf4241d406eb0bb33a8333649a6b77151244c2e"}, "")
-	dest, err := gsrpcTypes.NewMultiAddressFromHexAccountID(hexaAddr)
-	if err != nil {
-		panic(err)
-	}
-
-	// memo := []byte("memo:OUT:TSS_TESTING")
-	// call1, err := gsrpcTypes.NewCall(meta, "System.remark", memo)
-	//
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	amount := gsrpcTypes.NewUCompactFromUInt(346506515540)
-	call2, err := gsrpcTypes.NewCall(meta, "Balances.transfer", dest, amount)
-
-	if err != nil {
-		panic(err)
-	}
-
-	// batchCall, err := gsrpcTypes.NewCall(meta, "Utility.batch_all", []gsrpcTypes.Call{call1, call2})
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	genesisHash, err := s.polkaApi.RPC.Chain.GetBlockHash(0)
-
-	if err != nil {
-		fmt.Errorf("error %w", err)
-	}
-
-	rv, err := s.polkaApi.RPC.State.GetRuntimeVersionLatest()
-	// log.Info().Interface("runtime call", rv).Msg("runtime details")
-	if err != nil {
-		panic(err)
-	}
-
-	ext := gsrpcTypes.NewExtrinsic(call2)
-
-	// create storage key
-	storageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", s.ed25519PubKey)
-
-	if err != nil {
-		panic(err)
-	}
-
-	// fetch account info for nonce value
-	var accountInfo gsrpcTypes.AccountInfo
-	ok, err := s.polkaApi.RPC.State.GetStorageLatest(storageKey, &accountInfo)
-	if !ok {
-		panic(err)
-	}
-	nonce := accountInfo.Nonce
-
-	signOpts := gsrpcTypes.SignatureOptions{
-		BlockHash:          genesisHash, // using genesis since we're using immortal era
-		Era:                gsrpcTypes.ExtrinsicEra{IsMortalEra: false},
-		GenesisHash:        genesisHash,
-		Nonce:              gsrpcTypes.NewUCompactFromUInt(uint64(nonce)),
-		SpecVersion:        rv.SpecVersion,
-		Tip:                gsrpcTypes.NewUCompactFromUInt(0),
-		TransactionVersion: rv.TransactionVersion,
-	}
-
-	return signOpts, ext
 }
 
 func hash(payload []byte) []byte {
