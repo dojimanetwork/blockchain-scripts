@@ -1,11 +1,12 @@
 package main
 
 import (
+	"crypto/ed25519"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -29,11 +30,11 @@ import (
 	"github.com/dojimanetwork/go-polka-rpc/v5/signature"
 	gsrpcTypes "github.com/dojimanetwork/go-polka-rpc/v5/types"
 	"github.com/dojimanetwork/go-polka-rpc/v5/types/codec"
-	"github.com/dojimanetwork/go-subkey"
 	common2 "github.com/dojimanetwork/hermes/common"
 	"github.com/dojimanetwork/hermes/common/cosmos"
 	"github.com/dojimanetwork/hermes/narada/chainclients/polkadot"
 	btsskeygen "github.com/dojimanetwork/tss-lib/ecdsa/keygen"
+	btss "github.com/dojimanetwork/tss-lib/tss"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog/log"
 	"github.com/tendermint/btcd/btcec"
@@ -148,7 +149,8 @@ func main() {
 		}
 	}
 
-	s.algo = "ecdsa"
+	s.algo = "eddsa"
+	btss.SetCurve(edwards.Edwards())
 	s.KeygenAndKeySign(true)
 }
 
@@ -219,23 +221,25 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 	s.transferToPubAddress(address.String(), meta)
 
 	// cosmos pukey
-	unmarshal := GetPubKeyBytes(poolPubKey)
+	// unmarshal := GetPubKeyBytes(poolPubKey)
 	// get secp publickey
-	secpPub, err := common2.SecpPubkey(unmarshal)
+	// secpPub, err := common2.SecpPubkey(unmarshal)
 
+	// get eddsa publickey
+	ed25519PubKey, err := pubkey.GetEd25519PubK()
 	if err != nil {
 		panic(fmt.Sprintf("failed get pubkey from unmarshal:%v", err))
 	}
 
 	// get account id bytes
-	pubEncode := pubkey.SecpEncode(secpPub.ToECDSA())
-	accountId := pubkey.SecpAccountId(pubEncode)
+	// pubEncode := pubkey.SecpEncode(secpPub.ToECDSA())
+	// accountId := pubkey.SecpAccountId(pubEncode)
 
 	var accountInfo gsrpcTypes.AccountInfo
 
 	for i := 0; i < 5; i++ {
 		// create storage key
-		storageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", accountId)
+		storageKey, err := gsrpcTypes.CreateStorageKey(meta, "System", "Account", ed25519PubKey)
 		if err != nil {
 			fmt.Errorf("failed to get storage key")
 			time.Sleep(time.Second * 3)
@@ -334,12 +338,15 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 		TransactionVersion: signatureOpts.TransactionVersion,
 	}
 
-	srcPubkey, err := codec.HexDecodeString(subkey.EncodeHex(accountId))
-	if err != nil {
-		panic(fmt.Sprintf("failed to convert accountid to hex string:%v", err))
-	}
+	// ecdsa src pubkey
+	// srcPubkey, err := codec.HexDecodeString(subkey.EncodeHex(accountId))
+	// if err != nil {
+	// 	panic(fmt.Sprintf("failed to convert accountid to hex string:%v", err))
+	// }
+	//
+	// signerPubKey, err := gsrpcTypes.NewMultiAddressFromAccountID(srcPubkey)
 
-	signerPubKey, err := gsrpcTypes.NewMultiAddressFromAccountID(srcPubkey)
+	eddsaSrcPubkey, err := gsrpcTypes.NewMultiAddressFromAccountID(GetPubKeyBytes(poolPubKey).Bytes())
 
 	if err != nil {
 		panic(fmt.Sprintf("failed to get signer pubkey:%v", err))
@@ -389,59 +396,63 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 
 	// s.checkSignResult(keysignResult, poolPubKey)
 
-	var signature gsrpcTypes.EcdsaSignature
+	var eddsasignature gsrpcTypes.Signature
 out:
 	for i := 0; i < len(keysignResult)-1; i++ {
 		currentSignatures := keysignResult[i].Signatures
 		for j := 0; j <= len(currentSignatures)-1; j++ {
-			sigBytes, err := getEcdsaSignature(currentSignatures[j].R, currentSignatures[j].S)
+			sigBytes, sig, err := getEddsaSignature(currentSignatures[j].R, currentSignatures[j].S)
 			if err != nil {
 				panic(fmt.Sprintf("failed to get signature:%v", err))
 			}
 
-			bRecoveryId, err := base64.StdEncoding.DecodeString(currentSignatures[j].RecoveryID)
-			if err != nil {
-				panic(fmt.Sprintf("failed to get recovery id:%v", err))
-			}
+			// bRecoveryId, err := base64.StdEncoding.DecodeString(currentSignatures[j].RecoveryID)
+			// if err != nil {
+			// 	panic(fmt.Sprintf("failed to get recovery id:%v", err))
+			// }
 
-			// buf, err := base64.StdEncoding.DecodeString(currentSignatures[j].Msg)
-			if len(sigBytes) != SignatureLength {
-				panic(errors.New("invalid signature length"))
-			}
+			buf, err := base64.StdEncoding.DecodeString(currentSignatures[j].Msg)
+			// if len(sigBytes) != SignatureLength {
+			// 	panic(errors.New("invalid signature length"))
+			// }
 
 			// if len(buf) != MessageLength {
 			// 	panic(errors.New("invalid message length: not 32 byte hash"))
 			// }
 
-			// edPubK, err := edwards.ParsePubKey(pk.Bytes())
+			edPubK, err := edwards.ParsePubKey(GetPubKeyBytes(poolPubKey).Bytes())
 			//
 			// if err != nil {
 			// 	fmt.Errorf("inval ed25519 key with error %w", err)
 			// }
 
-			// verify := edwards.Verify(edPubK, buf, sigBytes.R, sigBytes.S)
-
-			// verify := gethSecp.VerifySignature(secpPub.SerializeUncompressed(), buf, sigBytes)
-			// if verify {
-			// add the recovery id at the end
-			result := make([]byte, 65)
-			copy(result, sigBytes)
-			result[64] = bRecoveryId[0]
-			signature = gsrpcTypes.NewEcdsaSignature(result)
+			val := sig[63] & 224
+			cryEdVer := ed25519.Verify(edPubK.Serialize(), buf, sig)
+			verify := edwards.Verify(edPubK, buf, sigBytes.R, sigBytes.S)
+			eddsasignature = gsrpcTypes.NewSignature(sig)
 			break out
-			// }
+			// verify := gethSecp.VerifySignature(secpPub.SerializeUncompressed(), buf, sigBytes)
+			if verify && cryEdVer && val != 0 {
+				// add the recovery id at the end
+				// result := make([]byte, 65)
+				// copy(result, sigBytes)
+				// result[64] = bRecoveryId[0]
+				// signature = gsrpcTypes.NewEcdsaSignature(result)
+				eddsasignature = gsrpcTypes.NewSignature(sig)
+				break out
+			}
 
 		}
 	}
 
-	multiSig := gsrpcTypes.MultiSignature{IsEcdsa: true, AsEcdsa: signature}
+	multiSig := gsrpcTypes.MultiSignature{IsEd25519: true, AsEd25519: eddsasignature}
 
 	if err != nil {
 		panic(fmt.Sprintf("failed to create new account id %v", err))
 	}
 
 	extSig := gsrpcTypes.ExtrinsicSignatureV4{
-		Signer:    signerPubKey,
+		Signer:    eddsaSrcPubkey,
 		Signature: multiSig,
 		Era:       era,
 		Nonce:     signatureOpts.Nonce,
@@ -470,6 +481,10 @@ out:
 	//
 
 	sub, err = s.polkaApi.RPC.Author.SubmitAndWatchExtrinsic(extrinsic)
+
+	if err != nil {
+		panic(fmt.Sprintf("subcribe err %v", err))
+	}
 	defer sub.Unsubscribe()
 
 	select {
@@ -491,10 +506,6 @@ func GetPubKeyBytes(pubkey string) types.PubKey {
 	}
 
 	return unmarshal
-}
-
-func (s *FourNodeTestSuite) checkSignResult(keysignResult map[int]keysign.Response, poolPubkey string) {
-
 }
 
 func getEcdsaSignature(r, s string) ([]byte, error) {
@@ -528,7 +539,7 @@ func getEcdsaSignature(r, s string) ([]byte, error) {
 	return sigBytes, nil
 }
 
-func getSignature(r, s string) (*edwards.Signature, []byte, error) {
+func getEddsaSignature(r, s string) (*edwards.Signature, []byte, error) {
 	rBytes, err := base64.StdEncoding.DecodeString(r)
 	if err != nil {
 		return nil, nil, err
@@ -537,11 +548,13 @@ func getSignature(r, s string) (*edwards.Signature, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	R32 := copyBytes(rBytes)
+	S32 := copyBytes(sBytes)
+	R := encodedBytesToBigInt(R32)
+	S := encodedBytesToBigInt(S32)
 
-	R := encodedBytesToBigInt(copyBytes(rBytes))
-	S := encodedBytesToBigInt(copyBytes(sBytes))
+	sig := append(R.Bytes(), S.Bytes()...)
 
-	sig := append([]byte{0}, append(rBytes[:], sBytes[:]...)...)
 	return &edwards.Signature{R: R, S: S}, sig, nil
 }
 
@@ -550,15 +563,20 @@ func getSignature(r, s string) (*edwards.Signature, []byte, error) {
 func encodedBytesToBigInt(s *[32]byte) *big.Int {
 	// Use a copy so we don't screw up our original
 	// memory.
+	sCopy := new([32]byte)
+	for i := 0; i < 32; i++ {
+		sCopy[i] = s[i]
+	}
+	reverse(sCopy)
 
-	bi := new(big.Int).SetBytes(s[:])
+	bi := new(big.Int).SetBytes(sCopy[:])
 
 	return bi
 }
 
-// bigIntToEncodedBytes converts a big integer into its corresponding
-// 32 byte little endian representation.
-func bigIntToEncodedBytes(a *big.Int) *[32]byte {
+// bigIntToEncodedBytesNoReverse converts a big integer into its corresponding
+// 32 byte big endian representation.
+func bigIntToEncodedBytesNoReverse(a *big.Int) *[32]byte {
 	s := new([32]byte)
 	if a == nil {
 		return s
@@ -580,9 +598,23 @@ func bigIntToEncodedBytes(a *big.Int) *[32]byte {
 		s[i] = aB[i]
 	}
 
-	// // Reverse the byte string --> little endian after
-	// // encoding.
-	// reverse(s)
+	return s
+}
+
+// bigIntToEncodedBytes converts a big integer into its corresponding
+// 32 byte little endian representation.
+func bigIntToEncodedBytes(a *big.Int) *[32]byte {
+	s := new([32]byte)
+	if a == nil {
+		return s
+	}
+
+	// Caveat: a can be longer than 32 bytes.
+	s = copyBytes(a.Bytes())
+
+	// Reverse the byte string --> little endian after
+	// encoding.
+	reverse(s)
 
 	return s
 }
@@ -604,14 +636,14 @@ func copyBytes(aB []byte) *[32]byte {
 	// If we have a short byte string, expand
 	// it so that it's long enough.
 	aBLen := len(aB)
-	if aBLen < fieldIntSize {
-		diff := fieldIntSize - aBLen
+	if aBLen < 32 {
+		diff := 32 - aBLen
 		for i := 0; i < diff; i++ {
 			aB = append([]byte{0x00}, aB...)
 		}
 	}
 
-	for i := 0; i < fieldIntSize; i++ {
+	for i := 0; i < 32; i++ {
 		s[i] = aB[i]
 	}
 
@@ -723,6 +755,12 @@ func (s *FourNodeTestSuite) transferToPubAddress(address string, meta *gsrpcType
 
 func hash(payload []byte) []byte {
 	h := sha256.New()
+	h.Write(payload)
+	return h.Sum(nil)
+}
+
+func hash512(payload []byte) []byte {
+	h := sha512.New()
 	h.Write(payload)
 	return h.Sum(nil)
 }

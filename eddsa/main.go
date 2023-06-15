@@ -23,7 +23,7 @@ func main() {
 	genesisHash := GetGenesisHash(api)
 	runtimeVersion := GetRuntimeVersionLatest(api)
 
-	mnemonic := "flee feel soup spend ridge oyster banner wrestle program uncover awkward blossom"
+	mnemonic := "bicycle youth kidney ugly actual web thank rate good garage program lend"
 	aliceEd25519KeyringPair, err := polkadot.Ed25519_KPFromSeedPhrase(mnemonic, 42)
 	// kp, err := signature.KeyringPairFromSecret(mnemonic, 42)
 
