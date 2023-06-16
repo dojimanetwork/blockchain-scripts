@@ -258,7 +258,7 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 		panic(err)
 	}
 
-	amount := gsrpcTypes.NewUCompactFromUInt(10000000000000)
+	amount := gsrpcTypes.NewUCompactFromUInt(1000000000000)
 	call2, err := gsrpcTypes.NewCall(meta, "Balances.transfer", dest, amount)
 	if err != nil {
 		panic(err)
