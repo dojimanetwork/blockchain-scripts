@@ -262,7 +262,7 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 		panic(err)
 	}
 
-	amount := gsrpcTypes.NewUCompactFromUInt(10000000000000)
+	amount := gsrpcTypes.NewUCompactFromUInt(1000000000000)
 	call2, err := gsrpcTypes.NewCall(meta, "Balances.transfer", dest, amount)
 	if err != nil {
 		panic(err)
@@ -364,7 +364,7 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 		b = h[:]
 	}
 
-	digest := blake2b.Sum256(b)
+	// digest := blake2b.Sum256(b)
 
 	if err != nil {
 		panic(err)
@@ -379,9 +379,9 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 			localPubKeys := append([]string{}, testPubKeys...)
 			var keysignReq keysign.Request
 			if newJoinParty {
-				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(digest[:])}, 10, localPubKeys, "0.14.0", s.algo)
+				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(b)}, 10, localPubKeys, "0.14.0", s.algo)
 			} else {
-				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(digest[:])}, 10, localPubKeys, "0.13.0", s.algo)
+				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(b)}, 10, localPubKeys, "0.13.0", s.algo)
 			}
 			res, err := s.servers[idx].KeySign(keysignReq)
 			if err != nil {
@@ -421,13 +421,14 @@ out:
 			// }
 
 			edPubK, err := edwards.ParsePubKey(GetPubKeyBytes(poolPubKey).Bytes())
-			//
-			// if err != nil {
-			// 	fmt.Errorf("inval ed25519 key with error %w", err)
-			// }
+			origSig, err := base64.StdEncoding.DecodeString(currentSignatures[i].Signature)
+
+			if err != nil {
+				fmt.Errorf("inval ed25519 key with error %w", err)
+			}
 
 			val := sig[63] & 224
-			cryEdVer := ed25519.Verify(edPubK.Serialize(), buf, sig)
+			cryEdVer := ed25519.Verify(edPubK.Serialize(), buf, origSig)
 			verify := edwards.Verify(edPubK, buf, sigBytes.R, sigBytes.S)
 			eddsasignature = gsrpcTypes.NewSignature(sig)
 			break out

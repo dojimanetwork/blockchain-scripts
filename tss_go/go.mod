@@ -23,6 +23,12 @@ require (
 	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2
 )
 
+replace (
+	github.com/dojimanetwork/dojima-tss => /Users/luffybhaagi/dojima/dojima-tss
+	github.com/dojimanetwork/tss-lib => /Users/luffybhaagi/dojima/dojima-tss-lib
+)
+
+
 require (
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/keyring v1.1.6 // indirect
