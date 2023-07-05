@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "@polkadot/api": "^9.4.3",
+    "@solana/web3.js": "^1.77.3",
+    "bip39": "^3.1.0",
+    "bs58": "^5.0.0",
     "dotenv": "^16.0.3",
+    "ed25519-hd-key": "^1.3.0",
     "ts-node": "^10.9.1"
   },
   "scripts": {
@@ -25,6 +29,9 @@
     "add_liqudity": "ts-node -r dotenv/config ./utility/index.ts",
     "swap": "ts-node -r dotenv/config ./utility/swap.ts",
     "block": "ts-node -r dotenv/config ./rpc-queries/block.ts",
-    "estimate": "ts-node -r dotenv/config ./tx/estimate.ts"
+    "estimate": "ts-node -r dotenv/config ./tx/estimate.ts",
+    "sol_acc": "ts-node -r dotenv/config ./solana-js/transfer/index.ts",
+    "sol_airdrop": "ts-node -r dotenv/config ./solana-js/transfer/airdrop.ts",
+    "sol_transfer": "ts-node -r dotenv/config ./solana-js/transfer/transfer.ts"
   }
 }
