@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@polkadot/api": "^9.4.3",
+    "@project-serum/anchor": "^0.26.0",
     "@solana/web3.js": "^1.77.3",
     "bip39": "^3.1.0",
     "bs58": "^5.0.0",
@@ -32,6 +33,7 @@
     "estimate": "ts-node -r dotenv/config ./tx/estimate.ts",
     "sol_acc": "ts-node -r dotenv/config ./solana-js/transfer/index.ts",
     "sol_airdrop": "ts-node -r dotenv/config ./solana-js/transfer/airdrop.ts",
-    "sol_transfer": "ts-node -r dotenv/config ./solana-js/transfer/transfer.ts"
+    "sol_transfer": "ts-node -r dotenv/config ./solana-js/transfer/transfer.ts",
+    "sol_add_liqui": "ts-node -r dotenv/config ./solana-js/transfer/add_liq_tx.ts"
   }
 }
