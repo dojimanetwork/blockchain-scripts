@@ -2,7 +2,10 @@ module github.com/dojimanetwork/polka-script/solana-go
 
 go 1.19
 
-require github.com/dojimanetwork/solana-go/v2 v2.0.0
+require (
+	github.com/dojimanetwork/solana-go/v2 v2.0.0
+	github.com/gagliardetto/binary v0.7.3
+)
 
 require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.4 // indirect
@@ -14,7 +17,6 @@ require (
 	github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79 // indirect
 	github.com/dojimanetwork/edwards25519/v2 v2.0.2 // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/gagliardetto/binary v0.7.3 // indirect
 	github.com/gagliardetto/treeout v0.1.4 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/gorilla/rpc v1.2.0 // indirect
