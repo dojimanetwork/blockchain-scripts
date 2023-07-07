@@ -1,5 +1,4 @@
-import { Connection, Keypair } from "@solana/web3.js";
-import * as bs58 from "bs58";
+
 import SolConnection from "./connect";
 import SolKeypair from "./keypair";
 
