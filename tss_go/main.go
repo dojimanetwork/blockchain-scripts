@@ -38,7 +38,6 @@ import (
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog/log"
 	"github.com/tendermint/btcd/btcec"
-	"golang.org/x/crypto/blake2b"
 )
 
 const (
@@ -357,14 +356,6 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to encode payload:%v", err))
 	}
-
-	// if data is longer than 256 bytes, hash it first
-	if len(b) > 256 {
-		h := blake2b.Sum256(b)
-		b = h[:]
-	}
-
-	// digest := blake2b.Sum256(b)
 
 	if err != nil {
 		panic(err)

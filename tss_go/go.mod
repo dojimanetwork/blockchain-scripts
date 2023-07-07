@@ -20,7 +20,6 @@ require (
 	github.com/dojimanetwork/tss-lib v0.1.1-0.20230208033040-d2527a14c58c
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/rs/zerolog v1.27.0
-	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2
 )
 
 replace (
@@ -33,7 +32,6 @@ require (
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20210127175223-0f934d64ecac // indirect
-	github.com/ChainSafe/gossamer v0.6.0 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/agl/ed25519 v0.0.0-20200225211852-fd4d107ace12 // indirect
@@ -52,7 +50,6 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
-	github.com/cosmos/ibc-go/v2 v2.0.3 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/danieljoos/wincred v1.1.0 // indirect

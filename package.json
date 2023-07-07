@@ -34,6 +34,8 @@
     "sol_acc": "ts-node -r dotenv/config ./solana-js/transfer/index.ts",
     "sol_airdrop": "ts-node -r dotenv/config ./solana-js/transfer/airdrop.ts",
     "sol_transfer": "ts-node -r dotenv/config ./solana-js/transfer/transfer.ts",
-    "sol_add_liqui": "ts-node -r dotenv/config ./solana-js/transfer/add_liq_tx.ts"
+    "sol_add_liqui": "ts-node -r dotenv/config ./solana-js/transfer/add_liq_tx.ts",
+    "sol_kp_balance": "ts-node -r dotenv/config ./solana-js/transfer/balance.ts",
+    "sol_addr_balance":"ts-node -r dotenv/config ./solana-js/transfer/bal_addr.ts"
   }
 }
