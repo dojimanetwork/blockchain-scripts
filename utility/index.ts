@@ -4,11 +4,12 @@ import type {EventRecord } from '@polkadot/types/interfaces';
 import '@polkadot/api-augment'
 
 import MnemonicAccount from '../account'
+import FetchInboundAddr from "../solana-js/transfer/inbound_addr";
 (async () => {
     const inst:ApiPromise = await CreateInstance()
     // Some mnemonic phrase
     const mnemonic = process.env.MNEMONIC as string;
-    const to_address = process.env.TO_ADDRESS as string;
+    const to_address = await FetchInboundAddr("DOT")
     const amt = process.env.AMOUNT as string
     const memo = process.env.ADD_LIQ_MEMO as string
     const keypair = await MnemonicAccount({mnemonic})

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/dojimanetwork/solana-go/v2"
 	"github.com/dojimanetwork/solana-go/v2/rpc"
 	"github.com/dojimanetwork/solana-go/v2/rpc/ws"
@@ -49,15 +50,15 @@ func main() {
 		panic(fmt.Errorf("failed to get keypair %w", err))
 	}
 
-	// out, err := rpcC.GetBalance(
-	// 	context.TODO(),
-	// 	kp.PublicKey(),
-	// 	rpc.CommitmentFinalized,
-	// )
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// spew.Dump(out)
+	out, err := rpcC.GetBalance(
+		context.TODO(),
+		kp.PublicKey(),
+		rpc.CommitmentFinalized,
+	)
+	if err != nil {
+		panic(err)
+	}
+	spew.Dump(out)
 
 	recentBlockHash, err := rpcC.GetRecentBlockhash(context.TODO(), rpc.CommitmentFinalized)
 
