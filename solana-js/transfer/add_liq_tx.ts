@@ -4,6 +4,7 @@ import SolKeypair from "./keypair";
 import {IDL} from "./idl_meta";
 import {Program, web3, AnchorProvider, Wallet} from "@project-serum/anchor";
 import FetchInboundAddr from "./inbound_addr";
+import FetchFirstNodeAddr from "./nodes";
 
 export class SOLNodeWallet implements Wallet {
     constructor(readonly payer: web3.Keypair) {
@@ -40,13 +41,13 @@ export class SOLNodeWallet implements Wallet {
     }
 
     const inbound_add = await FetchInboundAddr("SOL")
-
+    const doj_address = await FetchFirstNodeAddr()
     console.log(inbound_add)
     const wallet = new SOLNodeWallet(keypair)
     const provider = new AnchorProvider(connection, wallet, opts);
     const programIDPPubKey = new PublicKey('2dkwKCkTQz4xXxyjcvhUYdSb5fb3Bw15ra95o94WkyVo');
     const program = new Program(IDL, programIDPPubKey, provider);
-    const txhash = await program.rpc.transferNativeTokens(`${amount}`, memo, {
+    const txhash = await program.rpc.transferNativeTokens(`${amount}`, `${memo}:${doj_address}`, {
         accounts: {
             from: keypair.publicKey,
             to: new web3.PublicKey(inbound_add),
