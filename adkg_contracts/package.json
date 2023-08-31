@@ -14,5 +14,12 @@
     "hardhat-gas-reporter": "^1.0.9",
     "solidity-coverage": "^0.8.4",
     "typechain": "^8.3.1"
+  },
+  "scripts": {
+    "add_whitelist:dc": "npx hardhat run --network dojimachain scripts/configure_whitelist.js",
+    "deploy:dc": "npx hardhat run --network dojimachain scripts/deploy.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
   }
 }
