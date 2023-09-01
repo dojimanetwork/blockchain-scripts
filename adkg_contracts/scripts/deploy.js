@@ -8,7 +8,7 @@ const hre = require("hardhat");
 const fs = require("fs")
 async function main() {
 
-  const [acc] = await hre.ethers.getSigners()
+  const [acc]= await hre.ethers.getSigners()
   console.log(await hre.ethers.provider.getBalance(acc.address))
   const contracts = ["Migrations", "NodeList"]
     const Migration = await hre.ethers.getContractFactory(contracts[0])
@@ -28,7 +28,7 @@ async function main() {
       // console.log(err)
     })
 
-    fs.appendFile(`${process.cwd()}/contract.json`, `\n { \n "migration_address": "${migrationAddr}",\n "nodelist_address": "${nodeListAddr}"\n }`, (err) => {
+    await fs.appendFile(`${process.cwd()}/contract.json`, `\n { \n "migration_address": "${migrationAddr}",\n "nodelist_address": "${nodeListAddr}"\n }`, (err) => {
       console.log(err)
     })
 
