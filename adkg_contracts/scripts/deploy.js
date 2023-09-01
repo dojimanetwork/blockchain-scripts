@@ -23,14 +23,15 @@ async function main() {
     const migrationAddr = await migration.getAddress()
   const nodeListAddr = await nodelist.getAddress()
 
-    await fs.rm(`${process.cwd()}/contract.json`, (err) => {
+    fs.rm(`${process.cwd()}/contract.json`, (err) => {
       // ignore the error
       // console.log(err)
+        fs.appendFile(`${process.cwd()}/contract.json`, `\n { \n "migration_address": "${migrationAddr}",\n "nodelist_address": "${nodeListAddr}"\n }`, (err) => {
+          console.log(err)
+        })
     })
 
-    await fs.appendFile(`${process.cwd()}/contract.json`, `\n { \n "migration_address": "${migrationAddr}",\n "nodelist_address": "${nodeListAddr}"\n }`, (err) => {
-      console.log(err)
-    })
+
 
 }
 

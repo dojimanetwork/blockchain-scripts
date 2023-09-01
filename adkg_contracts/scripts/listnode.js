@@ -1,6 +1,6 @@
 const hre = require("hardhat");
 const contracts = require("../contract.json");
-const {BigNumberish} = require("ethers")
+
 async function main() {
     const signers = await hre.ethers.getSigners()
 

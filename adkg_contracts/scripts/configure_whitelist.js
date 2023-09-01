@@ -30,11 +30,6 @@ async function main() {
         const acc = whitelistedAccounts[i]
         tx(await nl.updateWhitelist(1, acc, true, { from: signers[0], gas: '100000' }), `adding ${acc} to whitelist`)
     }
-
-    for (var i = 0; i < whitelistedAccounts.length; i++) {
-        var res = await nl.IsWhitelisted(1, whitelistedAccounts[i])
-        console.log('should be whitelisted, isWhitelisted: ', res)
-    }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

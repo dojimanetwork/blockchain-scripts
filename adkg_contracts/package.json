@@ -16,12 +16,14 @@
     "typechain": "^8.3.1"
   },
   "scripts": {
-    "add_whitelist:dc": "npx hardhat run --network dojimachain scripts/configure_whitelist.js",
-    "add_whitelist:eth": "npx hardhat run --network local_eth scripts/configure_whitelist.js",
     "deploy:dc": "npx hardhat run --network dojimachain scripts/deploy.js",
     "deploy:eth": "npx hardhat run --network local_eth scripts/deploy.js",
-    "listnode:eth": "npx hardhat run --network local_eth scripts/listnode.js",
-    "listnode:dc": "npx hardhat run --network dojimachain scripts/listnode.js"
+    "add_whitelist:dc": "npx hardhat run --network dojimachain scripts/configure_whitelist.js",
+    "add_whitelist:eth": "npx hardhat run --network local_eth scripts/configure_whitelist.js",
+    "is_whitelist:dc": "npx hardhat run --network dojimachain scripts/is_whitelisted.js",
+    "is_whitelist:eth": "npx hardhat run --network local_eth scripts/is_whitelisted.js",
+    "listnode:dc": "npx hardhat run --network dojimachain scripts/listnode.js",
+    "listnode:eth": "npx hardhat run --network local_eth scripts/listnode.js"
   },
   "dependencies": {
     "dotenv": "^16.3.1"
