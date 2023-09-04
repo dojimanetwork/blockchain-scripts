@@ -6,6 +6,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
     "@nomicfoundation/hardhat-verify": "^1.1.1",
+    "@openzeppelin/hardhat-upgrades": "^2.2.1",
     "@typechain/ethers-v6": "^0.4.3",
     "@typechain/hardhat": "^8.0.3",
     "chai": "^4.3.8",
@@ -18,6 +19,8 @@
   "scripts": {
     "deploy:dc": "npx hardhat run --network dojimachain scripts/deploy.js",
     "deploy:eth": "npx hardhat run --network local_eth scripts/deploy.js",
+    "init:dc": "npx hardhat run --network dojimachain scripts/initalise.js",
+    "init:eth": "npx hardhat run --network local_eth scripts/initalise.js",
     "add_whitelist:dc": "npx hardhat run --network dojimachain scripts/configure_whitelist.js",
     "add_whitelist:eth": "npx hardhat run --network local_eth scripts/configure_whitelist.js",
     "is_whitelist:dc": "npx hardhat run --network dojimachain scripts/is_whitelisted.js",
@@ -26,6 +29,7 @@
     "listnode:eth": "npx hardhat run --network local_eth scripts/listnode.js"
   },
   "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "dotenv": "^16.3.1"
   }
 }
