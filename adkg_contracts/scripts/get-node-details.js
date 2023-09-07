@@ -3,15 +3,12 @@ const contracts = require("../contract.json");
 const whitelistedAccounts = require("../whiteList");
 
 async function main() {
-
+    const signers = await hre.ethers.getSigners()
     const nlAddr = contracts["nodelist_address"]
     const NL = await hre.ethers.getContractFactory("NodeList")
     const nl = await NL.attach(nlAddr)
-
-    for (let i = 0; i < whitelistedAccounts.length; i++) {
-        const res = await nl.isWhitelisted(1, whitelistedAccounts[i]);
-        console.log(`should be whitelisted, isWhitelisted ${whitelistedAccounts[i]}: `, res)
-    }
+    const res = await nl.getNodeDetails(signers[0].address);
+    console.log(`epoch details: `, res)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

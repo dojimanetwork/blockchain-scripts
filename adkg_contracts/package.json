@@ -17,16 +17,27 @@
     "typechain": "^8.3.1"
   },
   "scripts": {
-    "deploy:dc": "npx hardhat run --network dojimachain scripts/deploy.js",
+    "1.deploy:dc": "npx hardhat run --network dojimachain scripts/deploy.js",
     "deploy:eth": "npx hardhat run --network local_eth scripts/deploy.js",
-    "init:dc": "npx hardhat run --network dojimachain scripts/initalise.js",
+    "2.init:dc": "npx hardhat run --network dojimachain scripts/initalise.js",
     "init:eth": "npx hardhat run --network local_eth scripts/initalise.js",
-    "add_whitelist:dc": "npx hardhat run --network dojimachain scripts/configure_whitelist.js",
+    "3.set_buffer:dc": "npx hardhat run --network dojimachain scripts/set-buffer.js",
+    "set_buffer:eth": "npx hardhat run --network local_eth scripts/set-buffer.js",
+    "4.update_epoch:dc": "npx hardhat run --network dojimachain scripts/update-epoch.js",
+    "update_epoch:eth": "npx hardhat run --network local_eth scripts/update-epoch.js",
+    "5.add_whitelist:dc": "npx hardhat run --network dojimachain scripts/configure_whitelist.js",
     "add_whitelist:eth": "npx hardhat run --network local_eth scripts/configure_whitelist.js",
+    "6.set_current_epoch:dc": "npx hardhat run --network dojimachain scripts/set-current-epoch.js",
+    "set_current_epoch:eth": "npx hardhat run --network local_eth scripts/set-current-epoch.js",
+    "7.listnode:dc": "npx hardhat run --network dojimachain scripts/listnode.js",
+    "listnode:eth": "npx hardhat run --network local_eth scripts/listnode.js",
     "is_whitelist:dc": "npx hardhat run --network dojimachain scripts/is_whitelisted.js",
     "is_whitelist:eth": "npx hardhat run --network local_eth scripts/is_whitelisted.js",
-    "listnode:dc": "npx hardhat run --network dojimachain scripts/listnode.js",
-    "listnode:eth": "npx hardhat run --network local_eth scripts/listnode.js"
+    "node-regsitered:eth": "npx hardhat run --network local_eth scripts/node-registered.js",
+    "node-regsitered:dc": "npx hardhat run --network dojimachain scripts/node-registered.js",
+    "epoch-details:eth": "npx hardhat run --network local_eth scripts/get-epoch-details.js",
+    "epoch-details:dc": "npx hardhat run --network dojimachain scripts/get-epoch-details.js",
+    "get-node-details:dc": "npx hardhat run --network dojimachain scripts/get-node-details.js"
   },
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^4.9.3",

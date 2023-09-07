@@ -9,7 +9,7 @@ const fs = require("fs")
 async function main() {
 
   const [acc]= await ethers.getSigners()
-  console.log(await ethers.provider.getBalance(acc.address))
+  console.log(`${acc.address} :`,await ethers.provider.getBalance(acc.address))
   const contracts = ["NodeList"]
     // const Migration = await hre.ethers.getContractFactory(contracts[0])
     // const migration = await Migration.deploy()

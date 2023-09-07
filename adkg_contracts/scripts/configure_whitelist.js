@@ -24,8 +24,6 @@ async function main() {
     const nlAddr = contracts["nodelist_address"]
     const NL = await hre.ethers.getContractFactory("NodeList")
     const nl = await NL.attach(nlAddr)
-
-    tx(await nl.updateEpoch(1, 5, 3, 1, [], 0, 2), 'Updated epoch')
     for (let i = 0; i < whitelistedAccounts.length; i++) {
         const acc = whitelistedAccounts[i]
         tx(await nl.updateWhitelist(1, acc, true, { from: signers[0], gas: '100000' }), `adding ${acc} to whitelist`)
