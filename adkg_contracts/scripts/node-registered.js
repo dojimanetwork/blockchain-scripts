@@ -9,7 +9,7 @@ async function main() {
     const nl = await NL.attach(nlAddr)
 
     for (let i = 0; i < whitelistedAccounts.length; i++) {
-        const res = await nl.nodeRegistered(1, whitelistedAccounts[i]);
+        const res = await nl.nodeRegistered(5, whitelistedAccounts[i]);
         console.log(`node registered ${whitelistedAccounts[i]}: `, res)
     }
 }

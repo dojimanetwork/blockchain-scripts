@@ -26,7 +26,7 @@ async function main() {
     const nl = await NL.attach(nlAddr)
     for (let i = 0; i < whitelistedAccounts.length; i++) {
         const acc = whitelistedAccounts[i]
-        tx(await nl.updateWhitelist(1, acc, true, { from: signers[0], gas: '100000' }), `adding ${acc} to whitelist`)
+        tx(await nl.updateWhitelist(5, acc, true, { from: signers[0], gas: '100000' }), `adding ${acc} to whitelist`)
     }
 }
 

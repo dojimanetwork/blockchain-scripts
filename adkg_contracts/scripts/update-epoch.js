@@ -7,7 +7,7 @@ async function main() {
     const nlAddr = contracts["nodelist_address"]
     const NL = await hre.ethers.getContractFactory("NodeList")
     const nl = await NL.attach(nlAddr)
-    const result = await nl.updateEpoch(1, 6, 3, 2, [], 0, 2,{ from: signers[0], gasLimit: '500000' })
+    const result = await nl.updateEpoch(5, 3, 2, 2, [], 4, 6,{ from: signers[0], gasLimit: '500000' })
     const receipt = await result.wait()
     console.log(receipt)
 }

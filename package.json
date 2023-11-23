@@ -18,10 +18,12 @@
     "cross-fetch": "^4.0.0",
     "dotenv": "^16.0.3",
     "ed25519-hd-key": "^1.3.0",
+    "ethereumjs-tx": "^2.1.2",
     "ethers": "^6.7.1",
     "lodash": "^4.17.21",
     "node-fetch": "^3.3.1",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "web3": "^4.2.1"
   },
   "scripts": {
     "runtime-constants": "ts-node -r dotenv/config ./runtime-constants/index.ts",
@@ -42,6 +44,7 @@
     "sol_add_liqui": "ts-node -r dotenv/config ./solana-js/transfer/add_liq_tx.ts",
     "sol_kp_balance": "ts-node -r dotenv/config ./solana-js/transfer/balance.ts",
     "sol_addr_balance": "ts-node -r dotenv/config ./solana-js/transfer/bal_addr.ts",
-    "ecdsa_address": "ts-node ./account/ecda_private.ts"
+    "ecdsa_address": "ts-node ./account/ecda_private.ts",
+    "eth:add_pool": "ts-node ./ethereum/add_pool.js"
   }
 }
