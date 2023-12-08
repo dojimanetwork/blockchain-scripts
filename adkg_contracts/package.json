@@ -40,6 +40,7 @@
     "get-node-details:dc": "npx hardhat run --network dojimachain scripts/get-node-details.js",
     "add_liquidity:eth": "npx hardhat run --network local_eth scripts/add_liquidity.js",
     "add_liquidity:dc": "npx hardhat run --network dojimachain scripts/add_liquidity.js",
+    "add_liquidity:avax": "npx hardhat run --network avalanche scripts/add_liquidity.js",
     "get_tx_details": "npx hardhat run --network local_eth scripts/get-tx-details.js"
   },
   "dependencies": {

@@ -12,8 +12,8 @@ async function main() {
             to: '0xd526d5f47f863eff32b99bc4f9e77ddb4bd2929b',
             from: acc.address,
             nonce: nonce,
-            value: ethers.parseEther('1'),
-            data: utils.utf8ToHex("SWAP:DOJ.DOJ:0xa14655a5e856564341b4a659eff54e1932c9afd3"),
+            value: ethers.parseEther('10'),
+            data: utils.utf8ToHex("ADD:ETH.ETH:dojima1nh4y3gqxsn7ymm9t45zwsz3h8p9tm7pev8my62"),
             chainId: '1337'
         }
     )

@@ -63,6 +63,15 @@ module.exports = {
       //   count: 20,
       //   passphrase: "",
       // }
+    },
+    avalanche: {
+      url: "http://127.0.0.1:9652/ext/bc/C/rpc",
+      chainId: 43112 ,
+      gas: 5000000, //units of gas you are willing to pay, aka gas limit
+      gasPrice: 225000000000, //gas is typically in units of gwei, but you must enter it as wei here
+      accounts:[
+        "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027"
+      ]
     }
   }
 };
