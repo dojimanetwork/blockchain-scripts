@@ -41,6 +41,9 @@
     "add_liquidity:eth": "npx hardhat run --network local_eth scripts/add_liquidity.js",
     "add_liquidity:dc": "npx hardhat run --network dojimachain scripts/add_liquidity.js",
     "add_liquidity:avax": "npx hardhat run --network avalanche scripts/add_liquidity.js",
+    "swap:avax": "npx hardhat run --network avalanche scripts/swap.js",
+    "swap:eth": "npx hardhat run --network local_eth scripts/swap.js",
+    "swap:doj": "npx hardhat run --network dojimachain scripts/swap.js",
     "get_tx_details": "npx hardhat run --network local_eth scripts/get-tx-details.js"
   },
   "dependencies": {
