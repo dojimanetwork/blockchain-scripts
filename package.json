@@ -46,6 +46,7 @@
     "sol_addr_balance": "ts-node -r dotenv/config ./solana-js/transfer/bal_addr.ts",
     "ecdsa_address": "ts-node ./account/ecda_private.ts",
     "eth:add_pool": "ts-node ./ethereum/add_pool.js",
-    "send_wrap": "ts-node -r dotenv/config ./utility/send_wrap.ts"
+    "send_wrap": "ts-node -r dotenv/config ./utility/send_wrap.ts",
+    "gen_mnemonic": "ts-node ./account/generate_mnemonic.ts"
   }
 }
