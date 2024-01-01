@@ -2,9 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
-	"crypto/sha256"
-	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -131,8 +128,8 @@ func main() {
 	}
 
 	conf := common.TssConfig{
-		KeyGenTimeout:   90 * time.Second,
-		KeySignTimeout:  90 * time.Second,
+		KeyGenTimeout:   60 * time.Second,
+		KeySignTimeout:  700 * time.Millisecond,
 		PreParamTimeout: 5 * time.Second,
 		EnableMonitor:   false,
 	}
@@ -222,14 +219,14 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 	}
 
 	amt := "100000000"
-
+	memo := "OUT:3B8E79873CF2C3F3F7524CDDC4995BBC7AFC6D58996A2EBAB18A0C576BD4F01A"
 	ins_data := append([]byte{0x3a, 0x12, 0x3d, 0x16, 0xd0, 0xff, 0x68, 0xe7}, []byte{byte(len(amt)), 0, 0, 0}...)
 	ins_data = append(ins_data, []byte(amt)...)
-	ins_data = append(ins_data, []byte{byte(len("Testing")), 0, 0, 0}...)
-	ins_data = append(ins_data, []byte("Testing")...)
+	ins_data = append(ins_data, []byte{byte(len(memo)), 0, 0, 0}...)
+	ins_data = append(ins_data, []byte(memo)...)
 
 	programID := "2dkwKCkTQz4xXxyjcvhUYdSb5fb3Bw15ra95o94WkyVo"
-	dest := "FV1fdjFezEiKndqJD5DHLEnPpwpigJg8cY7HouqucfSv"
+	dest := "BAbhQWVLDc842V8AuEPmcxS1e8Wm9NYSZB8Hf1shivr3"
 
 	instruction := []solana.Instruction{
 		&TransactionInstructions{
@@ -243,7 +240,7 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 		},
 	}
 
-	solTx, err := solana.NewTransaction(
+	_, err = solana.NewTransaction(
 		instruction,
 		recentBlockHash.Value.Blockhash,
 		solana.TransactionPayer(publicKey),
@@ -254,7 +251,12 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 	}
 
 	// convert message to bytes
-	payload, err := solTx.Message.MarshalBinary()
+	// payload, err := solTx.Message.MarshalBinary()
+	p1 := "AQACBH9oPq1d/KzSeZjXezgCgK8oAN/2jyZ1hxKLXHM/STZWlwpUAp6fAJO81wbwFGrcAOZwyZS8XDJvMPKKEvnEpLgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABhGRnBAhjk8VN38ywETJrkR5SVmcmrNAwYs7RWSRdvOAwMo1YQ/QjQJjW0sa49w1cDki4RZBV/uCplssjfWrV8BAwMAAQImOhI9FtD/aOcMAAAAMTcyMDE2MDEyNTQzCgAAAFNvcnMrOjI1NTE="
+
+	if err != nil {
+		panic(fmt.Errorf("failed to marshal payload %w", err))
+	}
 
 	// payload := hash([]byte("helloworld"))
 	keysignResult := make(map[int]keysign.Response)
@@ -265,9 +267,9 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 			localPubKeys := append([]string{}, testPubKeys...)
 			var keysignReq keysign.Request
 			if newJoinParty {
-				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(payload)}, 10, localPubKeys, "0.14.0", s.algo)
+				keysignReq = keysign.NewRequest(poolPubKey, []string{p1}, 10, localPubKeys, "0.14.0", s.algo)
 			} else {
-				keysignReq = keysign.NewRequest(poolPubKey, []string{base64.StdEncoding.EncodeToString(payload)}, 10, localPubKeys, "0.13.0", s.algo)
+				keysignReq = keysign.NewRequest(poolPubKey, []string{p1}, 10, localPubKeys, "0.13.0", s.algo)
 			}
 			res, err := s.servers[idx].KeySign(keysignReq)
 			if err != nil {
@@ -280,78 +282,78 @@ func (s *FourNodeTestSuite) KeygenAndKeySign(newJoinParty bool) {
 	}
 	wg.Wait()
 
-	var firstSig solana.Signature
-out:
-	for i := 0; i < len(keysignResult)-1; i++ {
-		currentSignatures := keysignResult[i].Signatures
-		for j := 0; j <= len(currentSignatures)-1; j++ {
-			sigBytes, sig, err := getEddsaSignature(currentSignatures[j].R, currentSignatures[j].S)
-			if err != nil {
-				panic(fmt.Sprintf("failed to get signature:%v", err))
-			}
+	// 	var firstSig solana.Signature
+	// out:
+	// 	for i := 0; i < len(keysignResult)-1; i++ {
+	// 		currentSignatures := keysignResult[i].Signatures
+	// 		for j := 0; j <= len(currentSignatures)-1; j++ {
+	// 			sigBytes, sig, err := getEddsaSignature(currentSignatures[j].R, currentSignatures[j].S)
+	// 			if err != nil {
+	// 				panic(fmt.Sprintf("failed to get signature:%v", err))
+	// 			}
+	//
+	// 			buf, err := base64.StdEncoding.DecodeString(currentSignatures[j].Msg)
+	//
+	// 			edPubK, err := edwards.ParsePubKey(GetPubKeyBytes(poolPubKey).Bytes())
+	// 			origSig, err := base64.StdEncoding.DecodeString(currentSignatures[i].Signature)
+	//
+	// 			if err != nil {
+	// 				fmt.Errorf("inval ed25519 key with error %w", err)
+	// 			}
+	//
+	// 			val := sig[63] & 224
+	// 			cryEdVer := ed25519.Verify(edPubK.Serialize(), buf, origSig)
+	// 			verify := edwards.Verify(edPubK, buf, sigBytes.R, sigBytes.S)
+	// 			copy(firstSig[:], origSig)
+	// 			break out
+	// 			if verify && cryEdVer && val != 0 {
+	// 				copy(firstSig[:], origSig)
+	// 				break out
+	// 			}
+	//
+	// 		}
+	// 	}
 
-			buf, err := base64.StdEncoding.DecodeString(currentSignatures[j].Msg)
-
-			edPubK, err := edwards.ParsePubKey(GetPubKeyBytes(poolPubKey).Bytes())
-			origSig, err := base64.StdEncoding.DecodeString(currentSignatures[i].Signature)
-
-			if err != nil {
-				fmt.Errorf("inval ed25519 key with error %w", err)
-			}
-
-			val := sig[63] & 224
-			cryEdVer := ed25519.Verify(edPubK.Serialize(), buf, origSig)
-			verify := edwards.Verify(edPubK, buf, sigBytes.R, sigBytes.S)
-			copy(firstSig[:], origSig)
-			break out
-			if verify && cryEdVer && val != 0 {
-				copy(firstSig[:], origSig)
-				break out
-			}
-
-		}
-	}
-
-	var signatureCount []byte
-	bin.EncodeCompactU16Length(&signatureCount, 1)
-	output := make([]byte, 0, len(signatureCount)+len(signatureCount)*64+len(payload))
-	output = append(output, signatureCount[:]...)
-	output = append(output, firstSig[:]...)
-	output = append(output, payload[:]...)
-
-	opts := rpc.TransactionOpts{
-		SkipPreflight:       false,
-		PreflightCommitment: rpc.CommitmentFinalized,
-	}
-
-	hash, err := s.rpc.SendEncodedTransactionWithOpts(context.TODO(), base64.StdEncoding.EncodeToString(output), opts)
-
-	if err != nil {
-		panic(fmt.Errorf("failed to send tx %w", err))
-	}
-
-	sub, err := s.ws.SignatureSubscribe(
-		hash,
-		rpc.CommitmentFinalized,
-	)
-
-	if err != nil {
-		panic(err)
-	}
-
-	defer sub.Unsubscribe()
-
-	for {
-		got, err := sub.Recv()
-		if err != nil {
-			panic(err)
-		}
-		if got.Value.Err != nil {
-			panic(fmt.Errorf("transaction confirmation failed: %v", got.Value.Err))
-		} else {
-			fmt.Println(hash.String())
-		}
-	}
+	// var signatureCount []byte
+	// bin.EncodeCompactU16Length(&signatureCount, 1)
+	// output := make([]byte, 0, len(signatureCount)+len(signatureCount)*64+len(payload))
+	// output = append(output, signatureCount[:]...)
+	// output = append(output, firstSig[:]...)
+	// output = append(output, payload[:]...)
+	//
+	// opts := rpc.TransactionOpts{
+	// 	SkipPreflight:       false,
+	// 	PreflightCommitment: rpc.CommitmentFinalized,
+	// }
+	//
+	// hash, err := s.rpc.SendEncodedTransactionWithOpts(context.TODO(), base64.StdEncoding.EncodeToString(output), opts)
+	//
+	// if err != nil {
+	// 	panic(fmt.Errorf("failed to send tx %w", err))
+	// }
+	//
+	// sub, err := s.ws.SignatureSubscribe(
+	// 	hash,
+	// 	rpc.CommitmentFinalized,
+	// )
+	//
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//
+	// defer sub.Unsubscribe()
+	//
+	// for {
+	// 	got, err := sub.Recv()
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	if got.Value.Err != nil {
+	// 		panic(fmt.Errorf("transaction confirmation failed: %v", got.Value.Err))
+	// 	} else {
+	// 		fmt.Println(hash.String())
+	// 	}
+	// }
 
 }
 
@@ -397,51 +399,6 @@ func encodedBytesToBigInt(s *[32]byte) *big.Int {
 	bi := new(big.Int).SetBytes(sCopy[:])
 
 	return bi
-}
-
-// bigIntToEncodedBytesNoReverse converts a big integer into its corresponding
-// 32 byte big endian representation.
-func bigIntToEncodedBytesNoReverse(a *big.Int) *[32]byte {
-	s := new([32]byte)
-	if a == nil {
-		return s
-	}
-	// Caveat: a can be longer than 32 bytes.
-	aB := a.Bytes()
-
-	// If we have a short byte string, expand
-	// it so that it's long enough.
-	aBLen := len(aB)
-	if aBLen < fieldIntSize {
-		diff := fieldIntSize - aBLen
-		for i := 0; i < diff; i++ {
-			aB = append([]byte{0x00}, aB...)
-		}
-	}
-
-	for i := 0; i < fieldIntSize; i++ {
-		s[i] = aB[i]
-	}
-
-	return s
-}
-
-// bigIntToEncodedBytes converts a big integer into its corresponding
-// 32 byte little endian representation.
-func bigIntToEncodedBytes(a *big.Int) *[32]byte {
-	s := new([32]byte)
-	if a == nil {
-		return s
-	}
-
-	// Caveat: a can be longer than 32 bytes.
-	s = copyBytes(a.Bytes())
-
-	// Reverse the byte string --> little endian after
-	// encoding.
-	reverse(s)
-
-	return s
 }
 
 // reverse reverses a byte string.
@@ -582,18 +539,6 @@ func (s *FourNodeTestSuite) transferToPubAddress(address string) {
 		}
 	}
 
-}
-
-func hash(payload []byte) []byte {
-	h := sha256.New()
-	h.Write(payload)
-	return h.Sum(nil)
-}
-
-func hash512(payload []byte) []byte {
-	h := sha512.New()
-	h.Write(payload)
-	return h.Sum(nil)
 }
 
 func (s *FourNodeTestSuite) getTssServer(index int, conf common.TssConfig, bootstrap string) *tss.TssServer {

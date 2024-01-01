@@ -72,6 +72,12 @@ module.exports = {
       accounts:[
         "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027"
       ]
+    },
+    fuji:{
+      url: "https://ava-testnet.public.blastapi.io/ext/bc/C/rpc",
+      chainId: 43113 ,
+      gasPrice: 25000000000,
+      gas: 21000,
     }
   }
 };

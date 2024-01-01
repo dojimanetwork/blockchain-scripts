@@ -24,7 +24,7 @@ func main() {
 	runtimeVersion := GetRuntimeVersionLatest(api)
 
 	mnemonic := "bicycle youth kidney ugly actual web thank rate good garage program lend"
-	aliceEd25519KeyringPair, err := polkadot.Ed25519_KPFromSeedPhrase(mnemonic, 42)
+	aliceEd25519KeyringPair, err := polkadot.Ed25519KPFromSeedPhrase(mnemonic, 42)
 	// kp, err := signature.KeyringPairFromSecret(mnemonic, 42)
 
 	if err != nil {
@@ -60,11 +60,13 @@ func main() {
 
 	ext := types.NewExtrinsic(batchCall)
 
-	edExt := polkadot.Edd25519_Extrinsic{
-		Extrinsic: ext,
+	edExt := polkadot.Ed25519Extrinsic{
+		Extrinsic:     ext,
+		SignerOptions: options,
+		Keypair:       aliceEd25519KeyringPair,
 	}
 	// sign using Ed25519
-	err = edExt.Ed25519Sign(aliceEd25519KeyringPair, options)
+	err = edExt.Ed25519Sign()
 
 	if err != nil {
 		panic(err)

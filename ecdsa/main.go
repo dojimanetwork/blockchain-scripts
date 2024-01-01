@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"os/exec"
@@ -9,6 +10,7 @@ import (
 
 	gsrpc "github.com/dojimanetwork/go-polka-rpc/v5"
 	"github.com/dojimanetwork/go-polka-rpc/v5/config"
+	rpc "github.com/dojimanetwork/go-polka-rpc/v5/gethrpc"
 	"github.com/dojimanetwork/go-polka-rpc/v5/signature"
 	"github.com/dojimanetwork/go-polka-rpc/v5/types"
 	"github.com/dojimanetwork/go-polka-rpc/v5/types/codec"
@@ -42,16 +44,16 @@ func main() {
 		panic(fmt.Sprintf("failed to get kp %v", err))
 	}
 
-	storageKey := CreateStorageKey(metadata, accountID)
-	accountInfo := GetStorageLatest(api, storageKey)
-	nonce := accountInfo.Nonce
+	// storageKey := CreateStorageKey(metadata, accountID)
+	// accountInfo := GetStorageLatest(api, storageKey)
+	// nonce := accountInfo.Nonce
 
 	bobSr25519 := NewAddressFromHexAccountID("0x7a99a7227cd7ddf60976d0c2725b627b35968b51c35e2dc3572c9464e91c1b2b")
 	options := types.SignatureOptions{
 		BlockHash:          genesisHash,
 		Era:                types.ExtrinsicEra{IsMortalEra: false},
 		GenesisHash:        genesisHash,
-		Nonce:              types.NewUCompactFromUInt(uint64(nonce)),
+		Nonce:              types.NewUCompactFromUInt(uint64(100)),
 		SpecVersion:        runtimeVersion.SpecVersion,
 		Tip:                types.NewUCompactFromUInt(0),
 		TransactionVersion: runtimeVersion.TransactionVersion,
@@ -83,11 +85,25 @@ func main() {
 
 	hash, err := api.RPC.Author.SubmitExtrinsic(edExt.Extrinsic)
 	if err != nil {
-		fmt.Println(err.Error())
+		var extErr *rpc.JsonError
+		if errors.As(err, &extErr) {
+			fmt.Println(extErr.Code)
+		}
+
 		panic(err)
 	}
 	fmt.Printf("Transfer sent with extrinsic hash %#x\n", hash)
 
+}
+
+type ExtrinsicError struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+func (e *ExtrinsicError) Error() string {
+	return ""
 }
 
 func SignUsingEd25519(e types.Extrinsic, signer signature.KeyringPair, o types.SignatureOptions) (types.Extrinsic, error) {
