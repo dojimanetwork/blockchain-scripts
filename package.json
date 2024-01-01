@@ -51,6 +51,7 @@
     "ecdsa_address": "ts-node ./account/ecda_private.ts",
     "eth:add_pool": "ts-node ./ethereum/add_pool.js",
     "send_wrap": "ts-node -r dotenv/config ./utility/send_wrap.ts",
-    "gen_mnemonic": "ts-node ./account/generate_mnemonic.ts"
+    "gen_mnemonic": "ts-node ./account/generate_mnemonic.ts",
+    "gen_kp_file": "ts-node ./solana-js/transfer/kp_file.ts"
   }
 }
