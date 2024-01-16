@@ -17,6 +17,7 @@ import SolKeypair from "../solana-js/transfer/keypair";
 
     // Log some info
     // console.log("polkadot address", keypair.meta,`has address ${keypair.address} with publicKey [${keypair.publicKey}]`);
+    console.log("hex private key", avaxWallet.privKey)
     console.log("ethereum address", ethWallet.address);
     console.log("avalanche address", avaxWallet.address)
     console.log("solana address", solKp.publicKey.toString())
