@@ -7,7 +7,7 @@ import SolKeypair from "../solana-js/transfer/keypair";
     // await CreateInstance()
     // Some mnemonic phrase
     const mnemonic = process.env.MNEMONIC as string;
-    // const keypair = await MnemonicAccount({mnemonic})
+    const keypair = await MnemonicAccount({mnemonic})
 
     const ethWallet = getEthWallet(mnemonic)
     const avaxWallet = getAvaxWallet(mnemonic)
@@ -16,7 +16,7 @@ import SolKeypair from "../solana-js/transfer/keypair";
 
 
     // Log some info
-    // console.log("polkadot address", keypair.meta,`has address ${keypair.address} with publicKey [${keypair.publicKey}]`);
+    console.log("polkadot address", keypair.meta,`has address ${keypair.address} with publicKey [${keypair.publicKey}]`);
     console.log("hex private key", avaxWallet.privKey)
     console.log("ethereum address", ethWallet.address);
     console.log("avalanche address", avaxWallet.address)

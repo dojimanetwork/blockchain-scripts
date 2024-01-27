@@ -52,6 +52,7 @@
     "eth:add_pool": "ts-node ./ethereum/add_pool.js",
     "send_wrap": "ts-node -r dotenv/config ./utility/send_wrap.ts",
     "gen_mnemonic": "ts-node ./account/generate_mnemonic.ts",
-    "gen_kp_file": "ts-node ./solana-js/transfer/kp_file.ts"
+    "gen_kp_file": "ts-node ./solana-js/transfer/kp_file.ts",
+    "sign_tx": "ts-node ./dojima/tx.ts"
   }
 }
