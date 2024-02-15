@@ -9,11 +9,11 @@ async function main() {
     console.log(`${acc.address} :`,await ethers.provider.getBalance(acc.address))
     const nonce = await acc.getNonce()
     const tx = await acc.sendTransaction({
-            to: '0xd526d5f47f863eff32b99bc4f9e77ddb4bd2929b',
+            to: '0x23a9a914d6c325e033355ff7faf56fd142af10e1',
             from: acc.address,
             nonce: nonce,
             value: ethers.parseEther('10'),
-            data: utils.utf8ToHex("ADD:ETH.ETH:dojima1nh4y3gqxsn7ymm9t45zwsz3h8p9tm7pev8my62"),
+            data: utils.utf8ToHex("ADD:ETH.ETH:tdojima19jqq0xqle6lh4ggr6rrrvw5utz2k52q2h4kgnv"),
             chainId: '1337'
         }
     )
