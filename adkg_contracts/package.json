@@ -47,7 +47,8 @@
     "send:stage": "npx hardhat run --network dojimachain_prod scripts/send.js",
     "swap:eth": "npx hardhat run --network local_eth scripts/swap.js",
     "swap:doj": "npx hardhat run --network dojima_local scripts/swap.js",
-    "get_tx_details": "npx hardhat run --network local_eth scripts/get-tx-details.js"
+    "get_tx_details": "npx hardhat run --network local_eth scripts/get-tx-details.js",
+    "balance": "npx hardhat run --network dojima_local scripts/balance.js"
   },
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
