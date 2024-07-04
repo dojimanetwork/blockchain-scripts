@@ -10,6 +10,8 @@ import HDNode from "avalanche/dist/utils/hdnode"
 import { Avalanche, Mnemonic, Buffer } from "avalanche"
 import { EVMAPI, KeyChain } from "avalanche/dist/apis/evm"
 import {SigningKey} from "ethers";
+import {Network} from "@dojima-wallet/types";
+import {HermesInit} from "@dojima-wallet/connection";
 
 
 
@@ -68,4 +70,20 @@ export function getAvaxWallet(_mnemonic: string): Wallet {
     const address = ethers.computeAddress(new SigningKey(child.privateKey))
     const privKey = child.privateKey.toString("hex")
     return {address, privKey, pubKey: ""}
+}
+
+export function getHermesAddress() {
+    const mnemonic = process.env.MNEMONIC as string;
+    const memo = process.env.HERM_MEMO as string;
+    const amt = process.env.HERM_AMT as string;
+    const net = process.env.HERM_NET as string
+    let network: Network
+    if(net == "stagenet") {
+        network = Network.Stagenet
+    }else {
+        network = Network.Testnet
+    }
+    const hc = new HermesInit(mnemonic, network)
+    const address = hc.h4sConnect.getAddress(0)
+    return {address, privKey: "", pubKey: ""}
 }

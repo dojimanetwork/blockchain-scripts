@@ -1,6 +1,6 @@
 import CreateInstance from '../instance'
 import MnemonicAccount from './with-seed';
-import {getAvaxWallet, getBtcWallet, getEthWallet} from "./addr_utils";
+import {getAvaxWallet, getBtcWallet, getEthWallet, getHermesAddress} from "./addr_utils";
 import SolKeypair from "../solana-js/transfer/keypair";
 
 (async () => {
@@ -13,6 +13,7 @@ import SolKeypair from "../solana-js/transfer/keypair";
     const avaxWallet = getAvaxWallet(mnemonic)
     const solKp = SolKeypair({ mnemonic})
     const btcWallet = getBtcWallet(mnemonic)
+    const hermesAddress = getHermesAddress()
 
 
     // Log some info
@@ -22,5 +23,6 @@ import SolKeypair from "../solana-js/transfer/keypair";
     console.log("avalanche address", avaxWallet.address)
     console.log("solana address", solKp.publicKey.toString())
     console.log("bitcoin address", btcWallet.address)
+    console.log("hermes address", hermesAddress.address)
 
 })()
