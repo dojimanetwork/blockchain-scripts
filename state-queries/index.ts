@@ -12,6 +12,7 @@ import '@polkadot/api-augment'
     const now = await inst.query.timestamp.now();
 
     // Retrieve the account balance & nonce via the system module
+    // @ts-ignore
     const { nonce, data: balance } = await inst.query.system.account(ADDR);
 
     console.log(`${now}: balance of ${balance.free} and a nonce of ${nonce}`);
