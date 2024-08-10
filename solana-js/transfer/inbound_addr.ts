@@ -7,8 +7,8 @@ export default async function FetchInboundAddr(chain: string){
         method: 'GET',
         redirect: 'follow'
     };
-
-    const result = await fetch("http://localhost:1317/hermeschain/inbound_addresses", requestOptions)
+    const endpoint =process.env.HERMES_ENDPOINT as string
+    const result = await fetch(`${endpoint}/hermeschain/inbound_addresses`, requestOptions)
     const data = await result.json()
     const inbound_add = find(data, {chain})
     return inbound_add["address"]
