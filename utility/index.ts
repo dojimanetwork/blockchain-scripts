@@ -11,7 +11,8 @@ import FetchFirstNodeAddr from "../solana-js/transfer/nodes";
     // Some mnemonic phrase
     const mnemonic = process.env.MNEMONIC as string;
     const to_address = await FetchInboundAddr("DOT")
-    const doj_address = await FetchFirstNodeAddr()
+    // const doj_address = await FetchFirstNodeAddr()
+    const doj_address=process.env.DOJ_ADDRESS as string
     const amt = process.env.AMOUNT as string
     const memo = process.env.ADD_LIQ_MEMO as string
     const keypair = await MnemonicAccount({mnemonic})
