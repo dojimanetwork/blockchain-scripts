@@ -11,21 +11,20 @@ import MnemonicAccount from '../account/with-seed';
     const amt = process.env.AMOUNT as string
     const keypair = await MnemonicAccount({mnemonic})
 
-    const unsub = await inst.tx.balances
-        .transfer(to_address, amt)
+    const unsub = await inst.tx.balances.transferKeepAlive(to_address, amt)
         .signAndSend(keypair, (result: SubmittableResult) => {
-            console.log("Current status is", result.status);
+            // console.log("Current status is", result.status);
 
             if (result.status.isInBlock) {
-                console.log('Transaction included in blockhash', result.status.asInBlock);
+                // console.log('Transaction included in blockhash', result.status.asInBlock);
             } else if(result.status.isFinalized) {
-                console.log(`Transation finalized at blockhash`, result.status.asFinalized);
-                console.log("transaction hash", result.txHash);
+                // console.log(`Transation finalized at blockhash`, result.status.asFinalized);
+                console.log("transaction hash", result.txHash.toString());
 
-                result.events.forEach((value) => {
-                    console.log("\t", value.phase, ":", value.event.section, ".", value.event.method, "::::", value.event.data);
-
-                })
+                // result.events.forEach((value) => {
+                //     console.log("\t", value.phase, ":", value.event.section, ".", value.event.method, "::::", value.event.data);
+                //
+                // })
                 unsub()
             }
         })

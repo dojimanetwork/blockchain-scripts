@@ -1,4 +1,4 @@
-import { ApiPromise, WsProvider } from '@polkadot/api'
+import {ApiPromise, ApiRx, WsProvider} from '@polkadot/api'
 import dotenv from 'dotenv'
 
 dotenv.config()

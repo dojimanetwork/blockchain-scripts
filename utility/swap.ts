@@ -3,11 +3,12 @@ import {ApiPromise, SubmittableResult} from '@polkadot/api'
 import type {EventRecord } from '@polkadot/types/interfaces';
 import {stringToU8a, u8aToHex} from '@polkadot/util'
 import MnemonicAccount from '../account'
+import FetchInboundAddr from "../solana-js/transfer/inbound_addr";
 (async () => {
     const inst:ApiPromise = await CreateInstance()
     // Some mnemonic phrase
     const mnemonic = process.env.MNEMONIC as string;
-    const to_address = process.env.TO_ADDRESS as string;
+    const to_address = await FetchInboundAddr("DOT")
     const amt = process.env.AMOUNT as string
     const memo = process.env.SWAP_MEMO as string
     const keypair = await MnemonicAccount({mnemonic})

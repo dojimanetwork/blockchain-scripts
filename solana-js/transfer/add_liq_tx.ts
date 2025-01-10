@@ -42,10 +42,12 @@ export class SOLNodeWallet implements Wallet {
 
     const inbound_add = await FetchInboundAddr("SOL")
     const doj_address = await FetchFirstNodeAddr()
-    console.log(inbound_add)
+
     const wallet = new SOLNodeWallet(keypair)
+    console.log(wallet.publicKey.toString())
     const provider = new AnchorProvider(connection, wallet, opts);
-    const programIDPPubKey = new PublicKey('2dkwKCkTQz4xXxyjcvhUYdSb5fb3Bw15ra95o94WkyVo');
+    const programIDPPubKey = new PublicKey('8RBTxBEsk3WvTDZDGhKwCnFbjyyYKFuwnTds6zqg6i9W');
+    // @ts-ignore
     const program = new Program(IDL, programIDPPubKey, provider);
     const txhash = await program.rpc.transferNativeTokens(`${amount}`, `${memo}:${doj_address}`, {
         accounts: {

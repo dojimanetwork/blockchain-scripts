@@ -6,8 +6,8 @@ export default async function FetchFirstNodeAddr(){
         method: 'GET',
         redirect: 'follow'
     };
-
-    const result = await fetch("http://localhost:1317/hermeschain/nodes", requestOptions)
+    const endpoint =process.env.HERMES_ENDPOINT as string
+    const result = await fetch(`${endpoint}/hermeschain/nodes`, requestOptions)
     const data = await result.json()
     return data[0]["node_address"]
 }

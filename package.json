@@ -12,7 +12,7 @@
   "dependencies": {
     "@dojima-wallet/connection": "^0.0.1-alpha.68",
     "@dojima-wallet/utils": "^0.0.1-alpha.7",
-    "@polkadot/api": "^9.4.3",
+    "@polkadot/api": "^12.2.3",
     "@project-serum/anchor": "^0.26.0",
     "@solana/web3.js": "^1.77.3",
     "avalanche": "^3.16.0",
@@ -42,6 +42,7 @@
     "remark": "ts-node -r dotenv/config ./system/remark.ts",
     "add_liqudity": "ts-node -r dotenv/config ./utility/index.ts",
     "swap": "ts-node -r dotenv/config ./utility/swap.ts",
+    "is-sync": "ts-node -r dotenv/config ./rpc-queries/is-syncing.ts",
     "block": "ts-node -r dotenv/config ./rpc-queries/block.ts",
     "estimate": "ts-node -r dotenv/config ./tx/estimate.ts",
     "sol_acc": "ts-node -r dotenv/config ./solana-js/transfer/index.ts",
