@@ -9,5 +9,6 @@ import SolKeypair from "./keypair";
     const connection = SolConnection({url})
     const keypair = SolKeypair({mnemonic})
     let balance = await connection.getBalance(keypair.publicKey);
-    console.log(`${balance / LAMPORTS_PER_SOL} SOL`);
+
+    console.log(`address ${keypair.publicKey.toString()} : ${balance / LAMPORTS_PER_SOL} SOL`);
 })();
